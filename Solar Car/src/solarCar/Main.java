@@ -1,12 +1,14 @@
 package solarCar;
 
-public class Main 
+public class Main
 {
 
-	public static void main(String[] args) 
+	public static void main(String[] args)
 	{
-		System.out.println("test");
-		System.out.println("Matt TEST");
+		// TODO Auto-generated method stub
+		Display test = new Display();
+		test.createAndShowGUI();
+
 	}
 
 }
