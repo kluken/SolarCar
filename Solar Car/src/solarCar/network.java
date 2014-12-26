@@ -17,6 +17,11 @@ public class network {
 	private boolean J_DEBUG = true;
 	static private boolean locked = false;
 	
+	//...Network packet buffer
+	
+	//...Network timing
+	
+	
 	//...NETWORK VARIABLES
 	private boolean socketType = false;
 	private int mode = 0; // 0 CLOSED | 1 OPEN UDP | 2 OPEN TCP |
@@ -156,9 +161,45 @@ public class network {
         return netGUI;
     }
     
+    /**
+     * DEBUG UPDATE
+     * 	The debug window is updated 
+     * 	to the latest network infomation
+     *  - Current data rate
+     *  - Total data rate (Obsolete later)
+     *  - current packet rate
+     *  - total packets (Obsolete later )
+     *  
+     *  @return if success or not
+     */
+    private boolean debugUpdate ( ) {
+    	//...Are we in debug mode
+    	if (!J_DEBUG) return true;
+    	
+    	//...Update info
+        pIn.setText(packetsIn + " Incoming Packets / Second");      
+        pCount.setText(packetCount + " Packets Counted");       
+        inSize.setText(inboundSize + " Recv bytes / Second");
+    	
+    	return true;    	
+    }
+    
     private void debugOut ( String str ) {
     	if (J_DEBUG)
     		System.out.println("[NET] " + str );
     }
 	
+    
+    //...network update code
+    public int update () {
+    	int ret = 0;
+    	
+    	///....Check first
+    	try {
+    		
+    		
+    	}
+    	
+    	return ret;
+    }
 } 
