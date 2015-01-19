@@ -19,7 +19,7 @@ public class network {
 	static private boolean locked = false;
 	
 	//...Network packet buffer
-	private Queue <DatagramPacket> packetQueue = null;
+	private Queue <netPacket> packetQueue = null;
 	
 	//...Network timing
 	
