@@ -2,16 +2,16 @@ import java.nio.Buffer;
 import java.util.BitSet;
 
 //...Packet handling
-public class packet {
+public class netPacket {
 	private BitSet bit_array = null;
 	private Buffer data = null;
 	private int bus_id,client_id,packet_id,flag,data_len;
 	
 	//...Constuct class
-	public packet ( ) {
+	public netPacket ( ) {
 		///...Empty class
 	}
-	public packet ( Object raw ){
+	public netPacket ( Object raw ){
 		//...Read the header
 	}
 	

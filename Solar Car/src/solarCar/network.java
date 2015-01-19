@@ -26,7 +26,6 @@ public class network {
 	
 	//...NETWORK VARIABLES
 	private byte socketType = 'U'; /// U = UDP | T = TCP
-	private int mode = 0; // 0 CLOSED | 1 OPEN UDP | 2 OPEN TCP |
 	private short port = 4876;
 	private String ip = "239.255.60.60";
 	MulticastSocket sock =  null;
@@ -144,9 +143,10 @@ public class network {
 	            
 	            //...did we recieve data?
 	            if ((size+=msgPacket.getLength())<=0) return 0; //..no data.
-	       
+	          
+	            
 	            ///....Handle packet system. 	
-	            //packetQueue.add( msgPacket );  // <--- ERRROR?    
+	            packetQueue.add( msgPacket );  // <--- ERRROR?    
 	            
 	            ///....Stats track
 	            timeNow = System.nanoTime();
