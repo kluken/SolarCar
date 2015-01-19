@@ -1,7 +1,7 @@
 package solarCar;
 import java.awt.*;
-	import javax.swing.*;
-	import java.awt.event.*;
+import javax.swing.*;
+import java.awt.event.*;
 	 
 	public class TestGui extends JFrame
 	{
@@ -53,6 +53,7 @@ import java.awt.*;
 	        setVisible(true);
 	        setDefaultCloseOperation(EXIT_ON_CLOSE);
 	        online = true;
+
 	    }
      
 	    private class CalculateButtonHandler implements ActionListener
@@ -73,18 +74,14 @@ import java.awt.*;
 	    {
 	        public void actionPerformed(ActionEvent e)
 	        {
-	        	online = false;
-	        	System.exit(0);
+	        	online = false;	 
 	        }
-	    }
-	    
-	    public void windowClosing(WindowEvent we) {
-               online = false;
-        }
+	    }	
 	    
 	    public boolean isOnline () {
-	    	return online;
+	    	return online; 
 	    }
+
 	    
 	   
 	     

@@ -29,7 +29,8 @@ public class Main
 		boolean exit = false;
 		while (!exit ) {
 			//...Check main window for close?
-			if (!window.isOnline())exit=true;
+			if (!window.isEnabled())exit=true;
+			net.update();
 		}
 	}
 

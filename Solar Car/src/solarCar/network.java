@@ -20,6 +20,7 @@ public class network {
 	
 	//...Network packet buffer
 	private Queue <DatagramPacket> packetQueue = null;
+	
 	//...Network timing
 	
 	
@@ -32,7 +33,10 @@ public class network {
 	InetAddress address = null;
 	
 	//...DEBUG STATS?
-	private int packetsIn,inboundSize,packetCount; //...Stats for counting
+	private int packetsIn,inboundSize,packetCount,
+		stat_packetsInSecond,stat_recvSecond; //...Stats for counting
+	
+	private long time_Now = 0,time_debugLast=0;
 		
 	//...DEBUG window
 	JFrame netWindow = null;
@@ -43,9 +47,25 @@ public class network {
 	
 	public int initlise ( ) { 	
 		
+		//...setup stats
+		stat_packetsInSecond = 0;
+		stat_recvSecond = 0;
+		
+		if (SocketCreate()<0)return -100;
+		
+		///...DEBUG?
+		if (J_DEBUG) 
+			debugInit();			
+
+		//...successful creation
+		return 0;
+	}
+	
+	private int SocketCreate () {
 		if (locked) return -1; ///...Already init;
 		locked = true;
-		debugOut ("INITLISING NETWORK");
+		debugOut ("Creating network Socket");
+		String sType = "";
 		///...Socket Connection
 		try {
 			if (socketType == 'U' ) {		
@@ -53,26 +73,31 @@ public class network {
 				sock = new MulticastSocket(port);
 				address = InetAddress.getByName(ip);
 				sock.joinGroup(address);	
+				sType = "UDP MULTICAST";
+			}else{
+				sType = "TCP CONNECT";
 			}
 			
-			///...DEBUG?
-			if (J_DEBUG) 
-				debugInit();
-			
-			debugOut ("SOCKET CREATION UDP MULTICAST IP:" +ip + ":" + port );
+			debugOut (sType + " IP:" +ip + ":" + port );
 		} catch (IOException e) {
 			///Error has occurred. 
 			debugOut ("SOCKET EXCEPTION!!");
-			e.printStackTrace();	
+			return -1;
 		}
-
-		//...successful creation
-		return 0;
+		return 1;
+	}
+	private int SocketDestroy() {
+		
+		return 1;
 	}
 	
 	public int destroy ( ) {
 		//...Clean up the sockets
 		locked = false;
+		if (J_DEBUG) 
+			debugClean();
+		
+		SocketDestroy();		
 		debugOut ("NETWORK CLEANED UP");
 		//...success clean up
 		return 0;
@@ -83,9 +108,9 @@ public class network {
 		boolean ret = false;
 		//...if network active, deactivate
 		if (locked) {
-			destroy();
+			SocketDestroy();
 			socketType = 'T';
-			ret = initlise( )>=1;			
+			ret = SocketCreate( )>=1;			
 		}
 		debugOut ( "Network mode changed : TCP MODE" );
 		return ret;
@@ -95,9 +120,9 @@ public class network {
 		boolean ret = false;
 		//...if network active, deactivate
 		if (locked) {
-			destroy();
+			SocketDestroy();
 			socketType = 'U';
-			ret = initlise( )>=1;			
+			ret = SocketCreate( )>=1;		
 		}
 		debugOut ( "Network mode changed : UDP MODE" );
 		return ret;
@@ -113,21 +138,22 @@ public class network {
 		//...Try socket
 			while (duration < 100 ) { //...100 Miliseconds / 10 tick rate
 				
-	            byte[] buf = null;
+	            byte[] buf = new byte[1024];
 				DatagramPacket msgPacket = new DatagramPacket(buf, buf.length);
 	            sock.receive(msgPacket);
 	            
 	            //...did we recieve data?
 	            if ((size+=msgPacket.getLength())<=0) return 0; //..no data.
-	            
+	       
 	            ///....Handle packet system. 	
-	            packetQueue.add( msgPacket );
+	            //packetQueue.add( msgPacket );  // <--- ERRROR?    
 	            
 	            ///....Stats track
 	            timeNow = System.nanoTime();
 	            duration = (timeNow - startTime)/1000000;
-	            packetCount++;
-	            inboundSize+= msgPacket.getLength();
+	            packetCount++;packetsIn++;
+	            inboundSize+= msgPacket.getLength();         
+	            
 	            
 			}	
         } catch (IOException ex) {
@@ -136,7 +162,8 @@ public class network {
         	 * 
         	 * 
         	 */
-
+        	debugOut ( "[RECEIVE] IO EXCEPTION");
+        	
         }
 
 		//...return how much data has been recieved
@@ -173,12 +200,20 @@ public class network {
 
 		//2. Optional: What happens when the frame closes?	
 		netWindow.setContentPane( createNetContentPane() );
-		netWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		netWindow.setSize(256, 192);
-	    
+		netWindow.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		netWindow.setSize(256, 192);	    
 
 		//5. Show it.
 		netWindow.setVisible(true);
+		return J_DEBUG;
+	}
+	
+	private boolean debugClean () {
+		//...No debug no stats
+		if (!J_DEBUG) return true;
+		
+		debugOut ("Destroying debug window");
+		
 		return J_DEBUG;
 	}
 	
@@ -225,10 +260,24 @@ public class network {
     	//...Are we in debug mode
     	if (!J_DEBUG) return true;
     	
+    	//...Stats    	
+    	time_Now = System.nanoTime();
+    	long d = (time_Now - time_debugLast ) / 1000000;
+    	if (d > 1000) {
+    		time_debugLast = System.nanoTime();
+    		
+    		//....update
+    		stat_packetsInSecond = packetsIn;
+    		stat_recvSecond = inboundSize;
+    		//...reset
+    		inboundSize = 0;
+    		packetsIn = 0;
+    	}
+    	
     	//...Update info
-        pIn.setText(packetsIn + " Incoming Packets / Second");      
+        pIn.setText(this.stat_packetsInSecond + " Incoming Packets / Second");      
         pCount.setText(packetCount + " Packets Counted");       
-        inSize.setText(inboundSize + " Recv bytes / Second");
+        inSize.setText(this.stat_recvSecond + " Recv bytes / Second");
     	
     	return true;    	
     }
@@ -267,6 +316,9 @@ public class network {
     		//...Send DATA to class
     		
     	//}
+    		
+    	//...Debug update
+    	debugUpdate();
     	
     	return ret;
     }
