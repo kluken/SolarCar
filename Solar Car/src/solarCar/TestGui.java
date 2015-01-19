@@ -7,6 +7,7 @@ import java.awt.*;
 	{
 	    private static final int WIDTH = 400;
 	    private static final int HEIGHT = 300;
+	    private static boolean online = false;
 	     
 	    private JLabel lengthL, widthL, areaL;
 	    private JTextField lengthTF, widthTF, areaTF;
@@ -51,6 +52,7 @@ import java.awt.*;
 	        setSize(WIDTH, HEIGHT);
 	        setVisible(true);
 	        setDefaultCloseOperation(EXIT_ON_CLOSE);
+	        online = true;
 	    }
      
 	    private class CalculateButtonHandler implements ActionListener
@@ -71,9 +73,20 @@ import java.awt.*;
 	    {
 	        public void actionPerformed(ActionEvent e)
 	        {
-	            System.exit(0);
+	        	online = false;
+	        	System.exit(0);
 	        }
 	    }
+	    
+	    public void windowClosing(WindowEvent we) {
+               online = false;
+        }
+	    
+	    public boolean isOnline () {
+	    	return online;
+	    }
+	    
+	   
 	     
 	   /* public static void main(String[] args)
 	    {

@@ -12,7 +12,7 @@ public class Dictionary
 	/**
 	 * Dictionary to store the details of each packet, using the hex id as the key to retrieve from the map
 	 */
-	public HashMap<String, String[]> data;
+	public HashMap<String, String[]> data;	
 	
 	/**
 	 * Constructor to generate the map
@@ -23,7 +23,7 @@ public class Dictionary
 		data = new HashMap<>();
 		
 		//Setup the array to hold the contents of the 
-		String temp[] = {"canEthernetBridge", 
+		String temp[] = {"canEthernetBridge",
 							"16 48",
 							"currentCANBitrate",
 							"MACAddress"};

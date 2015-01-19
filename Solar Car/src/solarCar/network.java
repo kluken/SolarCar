@@ -87,7 +87,7 @@ public class network {
 			socketType = 'T';
 			ret = initlise( )>=1;			
 		}
-		debugOut ( );
+		debugOut ( "Network mode changed : TCP MODE" );
 		return ret;
 	}
 	
@@ -99,7 +99,7 @@ public class network {
 			socketType = 'U';
 			ret = initlise( )>=1;			
 		}
-		
+		debugOut ( "Network mode changed : UDP MODE" );
 		return ret;
 	}
 	
@@ -241,7 +241,7 @@ public class network {
     
     //...network update code
     public int update () {
-    	int ret = 0;
+    	int ret = 0,m=0;
     	String key = "";
     	
     	///....Check first
@@ -252,7 +252,15 @@ public class network {
     		
     		//...Pull data
     		if (dic.data.containsKey(key)){
-    			    			
+    			  m =  Integer.parseInt(dic.data.get(key)[1]);
+    			  switch (m) {
+    			  case 0: //...MISC
+    				  	
+    				  break;
+    			  default:
+    				  debugOut("Unknown Motorway for packet!!");
+    				  break;
+    			  }
     		}else{
     			//..EXCEPTION!
     		}
