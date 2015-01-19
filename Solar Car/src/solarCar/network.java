@@ -5,6 +5,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.io.IOException;
 import java.net.*;
+import java.util.Queue;
 
 import javax.swing.*;
 
@@ -18,12 +19,12 @@ public class network {
 	static private boolean locked = false;
 	
 	//...Network packet buffer
-	
+	private Queue <DatagramPacket> packetQueue = null;
 	//...Network timing
 	
 	
 	//...NETWORK VARIABLES
-	private boolean socketType = false;
+	private byte socketType = 'U'; /// U = UDP | T = TCP
 	private int mode = 0; // 0 CLOSED | 1 OPEN UDP | 2 OPEN TCP |
 	private short port = 4876;
 	private String ip = "239.255.60.60";
@@ -36,6 +37,9 @@ public class network {
 	//...DEBUG window
 	JFrame netWindow = null;
     JLabel pIn, inSize, pCount;
+    
+    //...Dictionary
+    private Dictionary dic = new Dictionary();
 	
 	public int initlise ( ) { 	
 		
@@ -44,9 +48,12 @@ public class network {
 		debugOut ("INITLISING NETWORK");
 		///...Socket Connection
 		try {
-			sock = new MulticastSocket(port);
-			address = InetAddress.getByName(ip);
-			sock.joinGroup(address);	
+			if (socketType == 'U' ) {		
+				///UDP MULTICAST
+				sock = new MulticastSocket(port);
+				address = InetAddress.getByName(ip);
+				sock.joinGroup(address);	
+			}
 			
 			///...DEBUG?
 			if (J_DEBUG) 
@@ -71,22 +78,64 @@ public class network {
 		return 0;
 	}
 	
+	//...Set type.
+	public boolean NetworkModeTCP () {
+		boolean ret = false;
+		//...if network active, deactivate
+		if (locked) {
+			destroy();
+			socketType = 'T';
+			ret = initlise( )>=1;			
+		}
+		debugOut ( );
+		return ret;
+	}
+	
+	public boolean NetworkModeUDP () {
+		boolean ret = false;
+		//...if network active, deactivate
+		if (locked) {
+			destroy();
+			socketType = 'U';
+			ret = initlise( )>=1;			
+		}
+		
+		return ret;
+	}
+	
+	
+	
 	public int recieve ( ) {
 		int size = 0;
-		
+		long startTime = System.nanoTime(),timeNow=0,duration=0;
+		timeNow = System.nanoTime();
 		try {
 		//...Try socket
-			while (true) {
+			while (duration < 100 ) { //...100 Miliseconds / 10 tick rate
+				
 	            byte[] buf = null;
 				DatagramPacket msgPacket = new DatagramPacket(buf, buf.length);
 	            sock.receive(msgPacket);
 	            
-	            ///....Handle packet system. 	            
+	            //...did we recieve data?
+	            if ((size+=msgPacket.getLength())<=0) return 0; //..no data.
+	            
+	            ///....Handle packet system. 	
+	            packetQueue.add( msgPacket );
+	            
+	            ///....Stats track
+	            timeNow = System.nanoTime();
+	            duration = (timeNow - startTime)/1000000;
+	            packetCount++;
+	            inboundSize+= msgPacket.getLength();
 	            
 			}	
         } catch (IOException ex) {
-
-            ex.printStackTrace();
+        	//...Input/Output exception; 
+        	/*
+        	 * 
+        	 * 
+        	 */
 
         }
 
@@ -193,12 +242,23 @@ public class network {
     //...network update code
     public int update () {
     	int ret = 0;
+    	String key = "";
     	
     	///....Check first
-    	try {
+    	//try {
+    		///...Packet
+    		recieve();    			
+    		//...Pull packets
     		
+    		//...Pull data
+    		if (dic.data.containsKey(key)){
+    			    			
+    		}else{
+    			//..EXCEPTION!
+    		}
+    		//...Send DATA to class
     		
-    	}
+    	//}
     	
     	return ret;
     }
