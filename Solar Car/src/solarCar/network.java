@@ -5,6 +5,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.io.IOException;
 import java.net.*;
+import java.util.LinkedList;
 import java.util.Queue;
 
 import javax.swing.*;
@@ -18,8 +19,9 @@ public class network {
 	private boolean J_DEBUG = true;
 	static private boolean locked = false;
 	
+	
 	//...Network packet buffer
-	private Queue <netPacket> packetQueue = null;
+	private Queue <netPacket> packetQueue;
 	
 	//...Network timing
 	
@@ -39,7 +41,7 @@ public class network {
 		
 	//...DEBUG window
 	JFrame netWindow = null;
-    JLabel pIn, inSize, pCount;
+    JLabel pIn, inSize, pCount,pDataQueue;
     
     //...Dictionary
     private Dictionary dic = new Dictionary();
@@ -49,6 +51,8 @@ public class network {
 		//...setup stats
 		stat_packetsInSecond = 0;
 		stat_recvSecond = 0;
+		
+		packetQueue = new LinkedList<netPacket>();
 		
 		if (SocketCreate()<0)return -100;
 		
@@ -143,10 +147,11 @@ public class network {
 	            
 	            //...did we recieve data?
 	            if ((size+=msgPacket.getLength())<=0) return 0; //..no data.
-	          
+	            
+	            netPacket newPacket = new netPacket( msgPacket.getData() );
 	            
 	            ///....Handle packet system. 	
-	            packetQueue.add( msgPacket );  // <--- ERRROR?    
+	            packetQueue.add( newPacket );  // <--- ERRROR?    
 	            
 	            ///....Stats track
 	            timeNow = System.nanoTime();
@@ -158,10 +163,6 @@ public class network {
 			}	
         } catch (IOException ex) {
         	//...Input/Output exception; 
-        	/*
-        	 * 
-        	 * 
-        	 */
         	debugOut ( "[RECEIVE] IO EXCEPTION");
         	
         }
@@ -240,6 +241,12 @@ public class network {
         inSize.setSize(256, 30);     
         inSize.setForeground(Color.blue);
         netGUI.add(inSize);
+        
+        pDataQueue = new JLabel("Network Data queue: " + packetQueue.size());
+        pDataQueue.setLocation(5, 95);
+        pDataQueue.setSize(256, 30);     
+        pDataQueue.setForeground(Color.blue);
+        netGUI.add(pDataQueue);
        
         netGUI.setOpaque(true);
         return netGUI;
@@ -278,7 +285,8 @@ public class network {
         pIn.setText(this.stat_packetsInSecond + " Incoming Packets / Second");      
         pCount.setText(packetCount + " Packets Counted");       
         inSize.setText(this.stat_recvSecond + " Recv bytes / Second");
-    	
+        pDataQueue.setText(this.packetQueue.size() + " packets in queue");
+        
     	return true;    	
     }
     
