@@ -18,6 +18,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.SWTException;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
@@ -32,6 +33,8 @@ import org.eclipse.swt.widgets.ProgressBar;
 
 
 public class Interface {
+	
+	private boolean J_DEBUG = true;
 
 	//...Window shell - Protected
 	protected Shell shlSolarCar; 
@@ -46,30 +49,61 @@ public class Interface {
 	private Text txtNetLoad;
 	private Text txtOverBatteryHealth;
 	private Display display = null;
+	
+	//...GUI Threading
+	Thread threadit = null;
 
+	private class InterfaceThread implements Runnable {
+		public synchronized void run() {
+			debugOut ( "Thread Online");
+			try {
+				display = Display.getDefault();
+				createContents();
+				shlSolarCar.open();
+				shlSolarCar.layout();
+				
+				//...updates the interface
+				while (!shlSolarCar.isDisposed()) {
+					if (!display.readAndDispatch()) {
+						display.sleep();
+					}
+				}
+			
+			}catch (SWTException ex){
+				debugOut ( "Thread exception! | Cause: " + ex.getCause() + " \n\tMessage: " + ex.getMessage());
+			}
+			
+			debugOut ( "Thread Offline");
+        }
+	}
+	
 	/**
 	 * Open the window.
 	 */
 	public void initilise() {
-		display = Display.getDefault();
-		createContents();
-		shlSolarCar.open();
-		shlSolarCar.layout();
+		//...Update thread - REQUIRED [CRITICAL]
+		try {
+			threadit = new Thread ( new InterfaceThread() );
+			threadit.sleep(500);
+			threadit.start();			
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}	
+	}
+	
+	public void destroy () {
+		threadit.interrupt();
 	}
 	
 	//...This may need to be threaded
 	public boolean update () {
-		if (!shlSolarCar.isDisposed()) {
-			if (!display.readAndDispatch()) {
-				display.sleep();
-			}
+		if (threadit.isAlive()) {			
 			return true;
 		}
 		return false;
 	}
 	
-	
-
 	/**
 	 * Create contents of the window.
 	 * @wbp.parser.entryPoint
@@ -253,5 +287,13 @@ public class Interface {
 
 	}
 	
+    private void debugOut ( String str ) {
+    	if (J_DEBUG)
+    		System.out.println("[Interface] " + str );
+    }
+    
+    
+
 	//...Network hook for debug?
+    
 }
