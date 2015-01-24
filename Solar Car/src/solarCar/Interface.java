@@ -35,28 +35,32 @@ import org.eclipse.swt.widgets.ProgressBar;
 public class Interface {
 	
 	private boolean J_DEBUG = true;
+	Surveillance Log = new Surveillance("INTERFACE");
 
 	//...Window shell - Protected
 	protected Shell shlSolarCar; 
-	private Text txtCarSpeed;
-	private Text text;
-	private Text txt_NetDataRecv;
-	private Text txt_NetPacketsSecond;
-	private Text txtNetConnectionState;
-	private Text txt_CarDistanceTotal;
-	private Text txtNetTotalMegabytes;
-	private Text txtNetTotalPackets;
-	private Text txtNetLoad;
-	private Text txtOverBatteryHealth;
-	private Display display = null;
+	
+	//...Overview Elements
+	protected Text txtCarSpeed;
+	protected Text txtBatteryLevel;
+	protected Text txtNetDataRecv;
+	protected Text txtNetPacketsSecond;
+	protected Text txtNetConnectionState;
+	protected Text txt_CarDistanceTotal;
+	protected Text txtNetTotalMegabytes;
+	protected Text txtNetTotalPackets;
+	protected Text txtNetLoad;
+	protected Text txtOverBatteryHealth;
+	protected Display display = null;
 	
 	//...GUI Threading
 	Thread threadit = null;
 
 	private class InterfaceThread implements Runnable {
 		public synchronized void run() {
-			debugOut ( "Thread Online");
+			Log.Log("Thread online");
 			try {
+				
 				display = Display.getDefault();
 				createContents();
 				shlSolarCar.open();
@@ -65,15 +69,16 @@ public class Interface {
 				//...updates the interface
 				while (!shlSolarCar.isDisposed()) {
 					if (!display.readAndDispatch()) {
+						
 						display.sleep();
 					}
 				}
 			
 			}catch (SWTException ex){
-				debugOut ( "Thread exception! | Cause: " + ex.getCause() + " \n\tMessage: " + ex.getMessage());
+				Log.Log ( "Thread exception! | Cause: " + ex.getCause() + " \n\tMessage: " + ex.getMessage());
 			}
 			
-			debugOut ( "Thread Offline");
+			Log.Log ( "Thread Offline");
         }
 	}
 	
@@ -88,17 +93,21 @@ public class Interface {
 			threadit.start();			
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
+			Log.Log ( "Thread Interrupted ");
 			e.printStackTrace();
 		}	
 	}
 	
 	public void destroy () {
+		Log.Log ( "Interrupting Thread!");
 		threadit.interrupt();
 	}
 	
 	//...This may need to be threaded
 	public boolean update () {
-		if (threadit.isAlive()) {			
+		if (threadit.isAlive()) {	
+			//...Call the network
+			
 			return true;
 		}
 		return false;
@@ -210,9 +219,9 @@ public class Interface {
 		lblBattery.setBounds(10, 21, 82, 15);
 		lblBattery.setText("Battery Level");
 		
-		text = new Text(grpOverviewBattery, SWT.BORDER | SWT.READ_ONLY | SWT.CENTER);
-		text.setBounds(96, 18, 76, 21);
-		text.setText("75%");
+		txtBatteryLevel = new Text(grpOverviewBattery, SWT.BORDER | SWT.READ_ONLY | SWT.CENTER);
+		txtBatteryLevel.setBounds(96, 18, 76, 21);
+		txtBatteryLevel.setText("75%");
 		
 		ProgressBar progressBarBatteryLevel = new ProgressBar(grpOverviewBattery, SWT.BORDER | SWT.SMOOTH);
 		progressBarBatteryLevel.setBounds(10, 42, 162, 17);
@@ -233,13 +242,13 @@ public class Interface {
 		lblDataRecv.setBounds(92, 25, 128, 15);
 		lblDataRecv.setText("Receiving/ Second");
 		
-		txt_NetDataRecv = new Text(grpNetwork, SWT.BORDER | SWT.READ_ONLY | SWT.CENTER);
-		txt_NetDataRecv.setText("1.2 kilobytes");
-		txt_NetDataRecv.setBounds(10, 22, 76, 21);
+		txtNetDataRecv = new Text(grpNetwork, SWT.BORDER | SWT.READ_ONLY | SWT.CENTER);
+		txtNetDataRecv.setText("--");
+		txtNetDataRecv.setBounds(10, 22, 76, 21);
 		
-		txt_NetPacketsSecond = new Text(grpNetwork, SWT.BORDER | SWT.READ_ONLY | SWT.CENTER);
-		txt_NetPacketsSecond.setText("40");
-		txt_NetPacketsSecond.setBounds(10, 49, 76, 21);
+		txtNetPacketsSecond = new Text(grpNetwork, SWT.BORDER | SWT.READ_ONLY | SWT.CENTER);
+		txtNetPacketsSecond.setText("--");
+		txtNetPacketsSecond.setBounds(10, 49, 76, 21);
 		
 		Label lblPacketsSecond = new Label(grpNetwork, SWT.NONE);
 		lblPacketsSecond.setBounds(92, 52, 128, 15);
@@ -250,7 +259,7 @@ public class Interface {
 		lblStatus.setText("Status: ");
 		
 		txtNetConnectionState = new Text(grpNetwork, SWT.BORDER | SWT.READ_ONLY);
-		txtNetConnectionState.setText("DISCONNECTED");
+		txtNetConnectionState.setText("--");
 		txtNetConnectionState.setBounds(92, 94, 101, 21);
 		
 		Label lblTotalBytes = new Label(grpNetwork, SWT.NONE);
@@ -258,10 +267,11 @@ public class Interface {
 		lblTotalBytes.setText("Total Bytes:");
 		
 		txtNetTotalMegabytes = new Text(grpNetwork, SWT.BORDER | SWT.READ_ONLY);
-		txtNetTotalMegabytes.setText("1.5 Megabytes");
+		txtNetTotalMegabytes.setText("--");
 		txtNetTotalMegabytes.setBounds(442, 22, 76, 21);
 		
 		txtNetTotalPackets = new Text(grpNetwork, SWT.BORDER | SWT.READ_ONLY);
+		txtNetTotalPackets.setText("--");
 		txtNetTotalPackets.setBounds(442, 49, 76, 21);
 		
 		Label lblTotalPackets = new Label(grpNetwork, SWT.NONE);
@@ -273,7 +283,7 @@ public class Interface {
 		lblThreadLoad.setText("Thread Load");
 		
 		txtNetLoad = new Text(grpNetwork, SWT.BORDER | SWT.READ_ONLY | SWT.CENTER);
-		txtNetLoad.setText("0.5");
+		txtNetLoad.setText("--");
 		txtNetLoad.setBounds(442, 94, 76, 21);
 		
 		//########################################################
@@ -285,14 +295,7 @@ public class Interface {
 		Composite comp_netoverview = new Composite(tabFolder, SWT.NONE);
 		tbtmNetOverview.setControl(comp_netoverview);
 
-	}
-	
-    private void debugOut ( String str ) {
-    	if (J_DEBUG)
-    		System.out.println("[Interface] " + str );
-    }
-    
-    
+	}    
 
 	//...Network hook for debug?
     

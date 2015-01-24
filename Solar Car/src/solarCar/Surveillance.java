@@ -69,4 +69,13 @@ public class Surveillance {
     	//...Write
     	
     }
+
+	public void Error(String str) {
+		// TODO Auto-generated method stub
+		String line = "[ERROR: "+ owner +"] " + str ;
+    	if (J_DEBUG)
+    		System.out.println( line );
+    	else 
+    		LoggIt ( line );
+	}
 }

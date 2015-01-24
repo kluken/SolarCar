@@ -61,6 +61,8 @@ public class network {
 		//...Create thread
 		netThread = new Thread ( new networkThread () );
 		netThread.start();
+		
+		Log.Error ("TEST");
 				
 		//...successful creation
 		return 0;
@@ -259,7 +261,7 @@ public class network {
 	    		    	interfaceThread.txtNetConnectionState.setText( state );
 	    		    	
 	    		    	//...TOTAL
-	    		    	interfaceThread.txtNetTotalPackets.setText ( packetsIn + "");
+	    		    	interfaceThread.txtNetTotalPackets.setText ( packetCount + "");
 	    		    	interfaceThread.txtNetLoad.setText (updateExTime + "ms");
 	    		 }
 	    	});
@@ -279,7 +281,7 @@ public class network {
     	netPacket packet = null;
     	stateUpdate();
     	///....Check first
-    	//try {			
+    	try {			
     		//...Pull packets
     		while (!packetQueue.isEmpty()){
     			packet = packetQueue.poll();
@@ -310,7 +312,9 @@ public class network {
 	    		}
     		}
     		
-    	//}
+    	}catch ( NullPointerException ex) {
+    		ex.getStackTrace();
+    	}
     		
     	// update
     	stateUpdate();	//...Update connection state
