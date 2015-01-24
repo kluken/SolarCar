@@ -16,15 +16,14 @@ public class network {
 	 * Info: Flag used to determine TCP or UDP CONNECTION
 	 */
 	
-	private boolean J_DEBUG = true;
 	static private boolean locked = false;
-	
+	Surveillance Log = new Surveillance( "NETWORK");
 	
 	//...Network packet buffer
 	private Queue <netPacket> packetQueue;
 	
-	//...Network timing
-	
+	//...Network recieve thread
+	Thread netThread = null;	
 	
 	//...NETWORK VARIABLES
 	private byte socketType = 'U'; /// U = UDP | T = TCP
@@ -32,12 +31,15 @@ public class network {
 	private String ip = "239.255.60.60";
 	MulticastSocket sock =  null;
 	InetAddress address = null;
+	private String state = "DISCONNECTED";
 	
 	//...DEBUG STATS?
 	private int packetsIn,inboundSize,packetCount,
 		stat_packetsInSecond,stat_recvSecond; //...Stats for counting
 	
-	private long time_Now = 0,time_debugLast=0;
+	private long time_Now = 0,time_debugLast=0,timeLastPacket=0,timeState=0,
+			updateExBegin=0,updateExEnd=0,updateExTime=0,
+			guiUpdateTlast=0;
 		
 	//...DEBUG window
 	JFrame netWindow = null;
@@ -56,10 +58,10 @@ public class network {
 		
 		if (SocketCreate()<0)return -100;
 		
-		///...DEBUG?
-		if (J_DEBUG) 
-			debugInit();			
-
+		//...Create thread
+		netThread = new Thread ( new networkThread () );
+		netThread.start();
+				
 		//...successful creation
 		return 0;
 	}
@@ -67,7 +69,7 @@ public class network {
 	private int SocketCreate () {
 		if (locked) return -1; ///...Already init;
 		locked = true;
-		debugOut ("Creating network Socket");
+		Log.Log ("Creating network Socket");
 		String sType = "";
 		///...Socket Connection
 		try {
@@ -77,14 +79,15 @@ public class network {
 				address = InetAddress.getByName(ip);
 				sock.joinGroup(address);	
 				sType = "UDP MULTICAST";
+				
 			}else{
 				sType = "TCP CONNECT";
 			}
 			
-			debugOut (sType + " IP:" +ip + ":" + port );
+			Log.Log (sType + " IP:" +ip + ":" + port );
 		} catch (IOException e) {
 			///Error has occurred. 
-			debugOut ("SOCKET EXCEPTION!!");
+			Log.Log (" Socket create exception!");
 			return -1;
 		}
 		return 1;
@@ -97,11 +100,9 @@ public class network {
 	public int destroy ( ) {
 		//...Clean up the sockets
 		locked = false;
-		if (J_DEBUG) 
-			debugClean();
 		
 		SocketDestroy();		
-		debugOut ("NETWORK CLEANED UP");
+		Log.Log ("NETWORK CLEANED UP");
 		//...success clean up
 		return 0;
 	}
@@ -115,7 +116,7 @@ public class network {
 			socketType = 'T';
 			ret = SocketCreate( )>=1;			
 		}
-		debugOut ( "Network mode changed : TCP MODE" );
+		Log.Log ( "Network mode changed : TCP MODE" );
 		return ret;
 	}
 	
@@ -127,48 +128,68 @@ public class network {
 			socketType = 'U';
 			ret = SocketCreate( )>=1;		
 		}
-		debugOut ( "Network mode changed : UDP MODE" );
+		Log.Log ( "Network mode changed : UDP MODE" );
 		return ret;
 	}
 	
 	
-	
-	public int recieve ( ) {
-		int size = 0;
-		long startTime = System.nanoTime(),timeNow=0,duration=0;
-		timeNow = System.nanoTime();
-		try {
-		//...Try socket
-			while (duration < 100 ) { //...100 Miliseconds / 10 tick rate
-				
-	            byte[] buf = new byte[1024];
-				DatagramPacket msgPacket = new DatagramPacket(buf, buf.length);
-	            sock.receive(msgPacket);
-	            
-	            //...did we recieve data?
-	            if ((size+=msgPacket.getLength())<=0) return 0; //..no data.
-	            
-	            netPacket newPacket = new netPacket( msgPacket.getData() );
-	            
-	            ///....Handle packet system. 	
-	            packetQueue.add( newPacket );  // <--- ERRROR?    
-	            
-	            ///....Stats track
-	            timeNow = System.nanoTime();
-	            duration = (timeNow - startTime)/1000000;
-	            packetCount++;packetsIn++;
-	            inboundSize+= msgPacket.getLength();         
-	            
-	            
-			}	
-        } catch (IOException ex) {
-        	//...Input/Output exception; 
-        	debugOut ( "[RECEIVE] IO EXCEPTION");
-        	
+	private void stateUpdate ( ) {
+		//...Connection state check
+		long timeNow = System.currentTimeMillis();
+	    timeState = (timeNow - timeLastPacket);
+        
+        //...work out state
+        if (timeState < 2000 ){
+        	state = "CONNECTED";
+        }else if ( timeState > 2000 && timeState < 5000 ){
+        	state = "GHOSTING";
+        }else if ( timeState > 5000 ) {
+        	state = "DISCONNECTED";
         }
+    }
+	
+	private class networkThread implements Runnable {
+		public synchronized void run() {
+			Log.Log("Thread online");
+			
+			int size = 0;
+			long startTime = System.currentTimeMillis(),timeNow=0,duration=0;
+			timeNow = System.currentTimeMillis();
+			try {
+			//...Try socket
+				while (true ) { //...10 Miliseconds / 1000 / 10 = 100 tick rate
+					
+					//...State check
+					
+		            byte[] buf = new byte[1024];
+					DatagramPacket msgPacket = new DatagramPacket(buf, buf.length);
+		            sock.receive(msgPacket);
+		            
+		            //...did we recieve data?
+		            if ((size+=msgPacket.getLength())>0)
+		            {
+		                timeLastPacket = System.currentTimeMillis();	            
+			            netPacket newPacket = new netPacket( msgPacket.getData() );
+			            
+			            ///....Handle packet system. 	
+			            packetQueue.add( newPacket );  // <--- ERRROR?    
+			            
+			            
+			            ///....Stats track
+			            timeNow = System.currentTimeMillis();
+			            duration = (timeNow - startTime);
+			            packetCount++;packetsIn++;
+			            inboundSize+= msgPacket.getLength();
+		            }
+				}	
+	        } catch (IOException ex) {
+	        	//...Input/Output exception; 
+	        	Log.Log ( "[RECEIVE THREAD] IO EXCEPTION");	        	
+	        }
 
-		//...return how much data has been recieved
-		return size; 
+			//...return how much data has been recieved			
+			Log.Log ( "Thread Offline" );
+        }
 	}
 	
 	//....Override
@@ -177,7 +198,7 @@ public class network {
 		if (newIp == null) return false;
 		
 		//...ADV - Valid IP? AAA.BBB.CCC.DDD
-		debugOut ("IP OVERRIDE: " + ip + " to " + newIp );		
+		Log.Log ("IP OVERRIDE: " + ip + " to " + newIp );		
 		ip = newIp;
 		return true;		
 	}
@@ -189,68 +210,8 @@ public class network {
 		//...success
 		return true;
 	}
-	
-	//...DEBUGGING
-	private boolean debugInit ( ) {
-		//...No debug no stats
-		if (!J_DEBUG) return true;
-		
-		debugOut ("Creating debug window");
-		//1. Create the frame.
-		netWindow = new JFrame("SOLAR CAR ");
 
-		//2. Optional: What happens when the frame closes?	
-		netWindow.setContentPane( createNetContentPane() );
-		netWindow.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		netWindow.setSize(256, 192);	    
-
-		//5. Show it.
-		netWindow.setVisible(true);
-		return J_DEBUG;
-	}
-	
-	private boolean debugClean () {
-		//...No debug no stats
-		if (!J_DEBUG) return true;
-		
-		debugOut ("Destroying debug window");
-		
-		return J_DEBUG;
-	}
-	
-    private JPanel createNetContentPane (){
-    	debugOut ("Creating content pane");
-        // We create a bottom JPanel to place everything on.
-        JPanel netGUI = new JPanel();
-        netGUI.setLayout(null);       
-
-        pIn = new JLabel(packetsIn + " Incoming Packets / Second");
-        pIn.setLocation(5, 5);
-        pIn.setSize(256, 30);       
-        pIn.setForeground(Color.blue);
-        netGUI.add(pIn);
-        
-        pCount = new JLabel(packetCount + " Packets Counted");
-        pCount.setLocation(5, 35);
-        pCount.setSize(256, 30);        
-        pCount.setForeground(Color.blue);
-        netGUI.add(pCount);
-        
-        inSize = new JLabel(inboundSize + " Recv bytes / Second");
-        inSize.setLocation(5, 65);
-        inSize.setSize(256, 30);     
-        inSize.setForeground(Color.blue);
-        netGUI.add(inSize);
-        
-        pDataQueue = new JLabel("Network Data queue: " + packetQueue.size());
-        pDataQueue.setLocation(5, 95);
-        pDataQueue.setSize(256, 30);     
-        pDataQueue.setForeground(Color.blue);
-        netGUI.add(pDataQueue);
-       
-        netGUI.setOpaque(true);
-        return netGUI;
-    }
+   
     
     /**
      * DEBUG UPDATE
@@ -263,71 +224,100 @@ public class network {
      *  
      *  @return if success or not
      */
-    private boolean debugUpdate ( ) {
-    	//...Are we in debug mode
-    	if (!J_DEBUG) return true;
-    	
+    private void statsUpdate ( ) {
+    	    	
     	//...Stats    	
-    	time_Now = System.nanoTime();
-    	long d = (time_Now - time_debugLast ) / 1000000;
-    	if (d > 1000) {
-    		time_debugLast = System.nanoTime();
+    	time_Now = System.currentTimeMillis();
+    	long d = (time_Now - time_debugLast );
+    	if (d > 500) {
+    		time_debugLast = System.currentTimeMillis();
     		
     		//....update
     		stat_packetsInSecond = packetsIn;
     		stat_recvSecond = inboundSize;
+    		
     		//...reset
     		inboundSize = 0;
     		packetsIn = 0;
-    	}
-    	
-    	//...Update info
-        pIn.setText(this.stat_packetsInSecond + " Incoming Packets / Second");      
-        pCount.setText(packetCount + " Packets Counted");       
-        inSize.setText(this.stat_recvSecond + " Recv bytes / Second");
-        pDataQueue.setText(this.packetQueue.size() + " packets in queue");
-        
-    	return true;    	
+    	} 	
     }
+
     
-    private void debugOut ( String str ) {
-    	if (J_DEBUG)
-    		System.out.println("[NET] " + str );
+    //...Interface can call this 
+    protected synchronized void netGuiUpdate ( final Interface interfaceThread ){
+    	//...Update network related infomation:
+    	long t = System.currentTimeMillis(),d=0;
+    	d = (t - guiUpdateTlast );
+    	if ( d > 30 )
+    	{
+	    	interfaceThread.display.getDefault().asyncExec(new Runnable() 
+	    	{
+	    		 public void run() {
+	    			//...PER SECOND
+	    		    	interfaceThread.txtNetDataRecv.setText( stat_recvSecond + " bytes" );
+	    		    	interfaceThread.txtNetPacketsSecond.setText( stat_packetsInSecond + "");
+	    		    	interfaceThread.txtNetConnectionState.setText( state );
+	    		    	
+	    		    	//...TOTAL
+	    		    	interfaceThread.txtNetTotalPackets.setText ( packetsIn + "");
+	    		    	interfaceThread.txtNetLoad.setText (updateExTime + "ms");
+	    		 }
+	    	});
+	    	
+	    	guiUpdateTlast = System.currentTimeMillis();
+    	}
     }
 	
     
     //...network update code
     public int update () {
+    	updateExBegin = System.currentTimeMillis(); //update load execution counter
+    	
+    	//...Function setup
     	int ret = 0,m=0;
     	String key = "";
-    	
+    	netPacket packet = null;
+    	stateUpdate();
     	///....Check first
-    	//try {
-    		///...Packet
-    		recieve();    			
+    	//try {			
     		//...Pull packets
-    		
-    		//...Pull data
-    		if (dic.data.containsKey(key)){
-    			  m =  Integer.parseInt(dic.data.get(key)[1]);
-    			  switch (m) {
-    			  case 0: //...MISC
-    				  	
-    				  break;
-    			  default:
-    				  debugOut("Unknown Motorway for packet!!");
-    				  break;
-    			  }
-    		}else{
-    			//..EXCEPTION!
+    		while (!packetQueue.isEmpty()){
+    			packet = packetQueue.poll();
+    			key = packet.getKey ();
+	    		//...Pull data
+	    		if (dic.data.containsKey(key)){
+	    			  m =  Integer.parseInt(dic.data.get(key)[1]);
+	    			  switch (m) {
+	    			  //.. 0x000 - 0x999
+	    			  case 0: //...MISC
+	    				  break;
+	    			
+	    			  case 1:	    				  
+	    				  break;
+	    				  
+	    			  case 2:
+	    				  break;
+	    				  
+	    			  case 3:	    				  
+	    				  break;
+	    				  
+	    			  default:
+	    				  Log.Log("Unknown Motorway for packet!!");
+	    				  break;
+	    			  }
+	    		}else{
+	    			//..EXCEPTION!
+	    		}
     		}
-    		//...Send DATA to class
     		
     	//}
     		
-    	//...Debug update
-    	debugUpdate();
+    	// update
+    	stateUpdate();	//...Update connection state
+    	statsUpdate();	//...Update stats for the GUI
     	
+    	updateExEnd = System.currentTimeMillis(); //update load execution counter
+    	updateExTime =( updateExEnd - updateExBegin );
     	return ret;
     }
 } 

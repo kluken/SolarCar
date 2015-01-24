@@ -21,12 +21,17 @@ public class netPacket {
 	//..Packet fields
 	private int bus_id,client_id,packet_id,flag,data_len;
 	
+	//...Static packet functions
+	private static int badPackets = 0;
+	private static long timeLastBadPacket = 0, timeNow =0,duration;
+	
 	//...Construct class
 	public netPacket ( ) {
 		///...Empty class
+		
 	}
 	public netPacket ( byte[] raw ){
-		//...Inital default values:
+		//...Initial default values:
 		bus_id=0;client_id=0;packet_id=0;flag=0;data_len=0;
 		//...Read the header
 		decompileHeader ( raw );
@@ -47,8 +52,21 @@ public class netPacket {
 			
 		//
 		}catch (BufferUnderflowException Ex) {
-			debugOut ("Bad Packet | BusID ("
-									+Integer.toHexString(bus_id)+")");
+			//...Calc
+			timeNow = System.nanoTime();
+            duration = (timeNow - timeLastBadPacket)/1000000;
+            
+			//...Bad packet notifcation!
+			if (badPackets < 5  && duration < 10000 ){
+				debugOut ("Bad Packet | BusID ("
+										+Integer.toHexString(bus_id)+")");
+				timeLastBadPacket = System.nanoTime();
+				badPackets++;
+				
+				//...Bad packet flooding
+			}else if (duration > 30000 ){
+				badPackets = 4;
+			}
 			return;
 		}
 		//...End result:
@@ -69,6 +87,10 @@ public class netPacket {
 	            (b[2] & 0xFF) << 8 |
 	            (b[1] & 0xFF) << 16 |
 	            (b[0] & 0xFF) << 24;
+	}
+	//...Key of the packet: HEX ID 0x400 EG <--
+	public String getKey() {
+		return Integer.toHexString(client_id);
 	}
 
 	/*
@@ -111,9 +133,6 @@ public class netPacket {
     			4 Bit Gap    			
     			1 Bit - R - RTR Packet. Data to be sent as RTR on CAN NETwork (SEET TRITIUM MANUAL)
     			1 Bit - E - Extended Id Packet : CAN EXTENDED ID PACKET
-    			
-    	
-    		
     	
 	 */
 	
