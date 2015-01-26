@@ -62,8 +62,6 @@ public class network {
 		netThread = new Thread ( new networkThread () );
 		netThread.start();
 		
-		Log.Error ("TEST");
-				
 		//...successful creation
 		return 0;
 	}
@@ -159,11 +157,11 @@ public class network {
 			timeNow = System.currentTimeMillis();
 			try {
 			//...Try socket
-				while (true ) { //...10 Miliseconds / 1000 / 10 = 100 tick rate
+				while (true ) {
 					
 					//...State check
 					
-		            byte[] buf = new byte[1024];
+		            byte[] buf = new byte[512];
 					DatagramPacket msgPacket = new DatagramPacket(buf, buf.length);
 		            sock.receive(msgPacket);
 		            
@@ -174,7 +172,7 @@ public class network {
 			            netPacket newPacket = new netPacket( msgPacket.getData() );
 			            
 			            ///....Handle packet system. 	
-			            packetQueue.add( newPacket );  // <--- ERRROR?    
+			            packetQueue.add( newPacket );  // <--- ERRROR?   
 			            
 			            
 			            ///....Stats track
@@ -231,7 +229,7 @@ public class network {
     	//...Stats    	
     	time_Now = System.currentTimeMillis();
     	long d = (time_Now - time_debugLast );
-    	if (d > 500) {
+    	if (d > 1000) { /// 1000ms = 1 Second
     		time_debugLast = System.currentTimeMillis();
     		
     		//....update

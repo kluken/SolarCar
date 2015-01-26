@@ -55,8 +55,19 @@ public class Surveillance {
     	else 
     		LoggIt ( line );
     }
+    
+    public void debugOut ( Object obj ) {
+    	String line = "["+ owner +"] OBJECT: " + obj ;
+    	if (J_DEBUG)
+    		System.out.println( line );
+    	else 
+    		LoggIt ( line );
+    }
     public void Log ( String str ) {
     	debugOut ( str );
+    }
+    public void Log ( Object obj ) {
+    	debugOut ( obj );
     }
     
     private void LoggIt ( String line ) {

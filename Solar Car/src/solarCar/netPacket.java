@@ -1,25 +1,28 @@
 package solarCar;
 
+import java.lang.reflect.Array;
 import java.nio.Buffer;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Arrays;
 import java.util.BitSet;
 
 //...Packet handling
 public class netPacket {
 	
+	private static Surveillance Log = new Surveillance( "PACKET" );
+	
 	//...Packet Flags
 	boolean fHeartBeat=false,fSetting=false,fRTR=false,fExtendId=false;
 	
 	private boolean J_DEBUG = true;
 	
-	//...Packet data
-	private BitSet bit_array = null;
-	private Buffer data = null;
-	
 	//..Packet fields
-	private int bus_id,client_id,packet_id,flag,data_len;
+	private static long protocalId = 0;// Protocal ID: 0x5472697469756;
+	private long bus_id,client_id,protocal;
+	private int packet_id;
+	private byte flag,data_len;
 	
 	//...Static packet functions
 	private static int badPackets = 0;
@@ -37,43 +40,79 @@ public class netPacket {
 		decompileHeader ( raw );
 	}
 	
-    private void debugOut ( String str ) {
-    	if (J_DEBUG)
-    		System.out.println("[PACKET] " + str );
-    }
+	public boolean isSet(byte b, int bit) {
+	    int index = bit / 8;  // Get the index of the array for the byte with this bit
+	    int bitPosition = bit % 8;  // Position of this bit in a byte
+
+	    return (b >> bitPosition & 1) == 1;
+	}
 	
-	public void decompileHeader (byte [] data ) {
+   public void decompileHeader (byte [] data ) {
 		try {
-			//....Get Bus ID & Bus Number 
-			byte [] subArray = Arrays.copyOfRange ( data , 1 , 3 );
-			ByteBuffer temp = ByteBuffer.wrap( subArray );
-			bus_id = temp.getInt();
+			//....Get Bus ID & Bus Number
+			ByteBuffer bb = ByteBuffer.wrap( data );
+			bb.order(ByteOrder.BIG_ENDIAN);
 			
+			/*
+			 * 	For the bus/client id, we include the padding when retrieving the infomation.
+			 * 	this is helpful as the padding is null (or zero'ed) meaning the data isn't affected.
+			 * 	Will need to check in live testing. so far so good.
+			 * 
+			 * 	do note, that bus id needs to be broken down to get the version number and
+			 * 	bus id. Version number is upper 52 bits and bus id low 4. 
+			 * */
+		
+			bus_id		= bb.getLong();
+			client_id 	= bb.getLong();
+			packet_id 	= bb.getInt();
+			flag 		= bb.get();
+			data_len 	= bb.get();
 			
+			/*
+			 * 	H – Heartbeat / query response packet Indicates that this datagram
+			 *	contains a message from the bridge itself, rather than a bridged CAN
+			 *	packet. This will either be a bridge heartbeat packet, or a packet
+			 *	containing a response to a query request.
+			 *	• S – Settings packet Indicates that this datagram contains a setting for
+			 *	the bridge itself, and should not be bridged on to the physical CAN
+			 *	network.
+			 *	• R – RTR packet Indicates that the data contained in this datagram
+			 *	should be sent as an RTR packet on the physical CAN network.
+			 *	• E – Extended id packet Indicates that this packet should be sent with
+			 *	an extended CAN identifier.
+			 * */
+			//...Flag extraction
+			fHeartBeat=isSet(flag,0);
+			fSetting=isSet(flag,1);
+			fRTR=isSet(flag,6);
+			fExtendId=isSet(flag,7);		
+			
+			// Packet Debug - LOW LEVEL
+			//Log.Log( " BUS: " + bus_id + " Client: " + client_id +  " PACKET: " + getKey()	+ " LEN: " + data_len );						
+		
 		//
 		}catch (BufferUnderflowException Ex) {
 			//...Calc
-			timeNow = System.nanoTime();
-            duration = (timeNow - timeLastBadPacket)/1000000;
+			timeNow = System.currentTimeMillis();
+            duration = (timeNow - timeLastBadPacket);
             
 			//...Bad packet notifcation!
-			if (badPackets < 5  && duration < 10000 ){
-				debugOut ("Bad Packet | BusID ("
-										+Integer.toHexString(bus_id)+")");
-				timeLastBadPacket = System.nanoTime();
+			if (badPackets < 5  && duration > 1200 ){
+				Log.Error ("Bad Packet!! LEN: "+data.length + "\n\tTech: "+Ex.getMessage());
+				timeLastBadPacket = System.currentTimeMillis();
 				badPackets++;
 				
 				//...Bad packet flooding
-			}else if (duration > 30000 ){
+			}else if (duration > 5000 ){
 				badPackets = 4;
 			}
 			return;
 		}
 		//...End result:
-		debugOut ("Packet: BusID ("
+		/*Log.Log ("Packet: BusID ("
 									+Integer.toHexString(bus_id)+") | client_id("
 									+Integer.toString(client_id)+") | packet_id("
-									+Integer.toString(packet_id)+"");
+									+Integer.toString(packet_id)+"");*/
 	}
 	
 	public boolean isFlagged() {
@@ -90,9 +129,20 @@ public class netPacket {
 	}
 	//...Key of the packet: HEX ID 0x400 EG <--
 	public String getKey() {
-		return Integer.toHexString(client_id);
+		return "0x" + Integer.toHexString(packet_id);
 	}
+	
+	public String HexStr ( int i ){ return "0x" + Integer.toHexString(i); }
+	public String HexStr ( long i ){ return "0x" + Long.toHexString(i); }	
+	
+	//....Packet flags
+	public boolean flagHeartBeat() 	{return fHeartBeat; }
+	public boolean flagSetting() 	{return fSetting; }
+	public boolean flagRTR() 		{return fRTR; }
+	public boolean flagExndId() 	{return fExtendId; }
 
+	//...Packet type:
+	
 	/*
 	 * 
 	 * 	UDP MULTICAST PACKET LAYOUT
@@ -100,8 +150,8 @@ public class netPacket {
     	bit_array.unpack('bits:8, bits:56, bits:8, bits:56, bits:32, bits:8, bits:8, bits')
     	
     	Read: 
-    		- 64 Bits /8 8 Byte - Bus ID
-    		- 64 Bits /8 8 Byte - Client Id
+    		- 64 Bits /8 8 Byte - Padding(8) + Bus ID(56)
+    		- 64 Bits /8 8 Byte - Padding(8) + Client Id(56)
     		- 32 Bits /8 4 Byte - packet_id
     		-  8 Bits /8 1 Byte - Flags
     		-  8 Bits /8 1 Byte - Data length
