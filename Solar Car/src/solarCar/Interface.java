@@ -10,7 +10,7 @@ package solarCar;
  * 	Project(Solar Car)->Properties-> Java Build Path
  * 			-> Add External Jars.
  * 	Locate the SWT plugins. 
- *  C:\ecliple\plugins <- Default plugin.
+ *  C:\eclipse\plugins <- Default plugin.
  * 
  * 
  */
