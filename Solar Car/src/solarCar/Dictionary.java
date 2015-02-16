@@ -1,6 +1,7 @@
 package solarCar;
 
 import java.util.HashMap;
+import java.util.Iterator;
 
 /**
  * 
@@ -9,6 +10,8 @@ import java.util.HashMap;
  */
 public class Dictionary 
 {
+	private static boolean J_DEBUG = true;
+	
 	/**
 	 * Dictionary to store the details of each packet, using the hex id as the key to retrieve from the map
 	 */
@@ -2586,6 +2589,27 @@ public class Dictionary
 							"cell3Volt"};
 		//Store the key and array in the HashMap
 		data.put("0x1ef", temp);		
+		
+		//Setup the array to hold the contents of the 
+		temp = new String[] {"1",
+							"shuntPackStateOfCharge", 
+							"32 32",
+							"stateOfChargeAmpHoursConsumed",
+							"stateOfChargePercentage"};
+		//Store the key and array in the HashMap
+		data.put("0x1ef", temp);	
+		
+		
+		if (J_DEBUG)
+		{
+			Iterator iterator = data.keySet().iterator();  
+			while (iterator.hasNext()) 
+			{
+			   String key = iterator.next().toString();
+			   String value = data.get(key)[0];
+			   System.out.println("[DICTIONARY] " + key + " " + value);
+			}
+		}
 
 	}
 }
