@@ -11,6 +11,7 @@ import java.util.Iterator;
 public class Dictionary 
 {
 	private static boolean J_DEBUG = true;
+	private Surveillance Log = new Surveillance( "DICTONARY");
 	
 	/**
 	 * Dictionary to store the details of each packet, using the hex id as the key to retrieve from the map
@@ -2602,13 +2603,15 @@ public class Dictionary
 		
 		if (J_DEBUG)
 		{
+			Log.Log ( "Begin log Contents");
 			Iterator iterator = data.keySet().iterator();  
 			while (iterator.hasNext()) 
 			{
 			   String key = iterator.next().toString();
 			   String value = data.get(key)[0];
-			   System.out.println("[DICTIONARY] " + key + " " + value);
+			   Log.Log( key + " " + value);
 			}
+			Log.Log ( "End log Contents");
 		}
 
 	}

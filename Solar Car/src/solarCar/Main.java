@@ -3,8 +3,9 @@ package solarCar;
 public class Main
 {
 	//...GENSIS
-	private static Interface window = null;	
+	protected static Interface window = null;	
 	protected static network net = null;
+	protected static Settings options = null;
 	private static Surveillance Log = new Surveillance("MAIN");
 	
 	public static void main(String[] args)
@@ -13,6 +14,7 @@ public class Main
 		Log.Log ("Calling Initlization functions");
 		window = new Interface();		
 		net = new network();
+		options = new Settings();
 		
 		window.initilise();
 		net.initlise(); ///...Initlise network side:
