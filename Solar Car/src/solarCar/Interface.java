@@ -30,6 +30,8 @@ import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.ProgressBar;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 
 
 public class Interface {
@@ -138,6 +140,12 @@ public class Interface {
 		mntmApplication.setMenu(menu_1);
 		
 		MenuItem mntmSettings = new MenuItem(menu_1, SWT.NONE);
+		mntmSettings.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				Main.options.open();
+			}
+		});
 		mntmSettings.setText("Settings");
 		
 		MenuItem mntmExit = new MenuItem(menu_1, SWT.NONE);
