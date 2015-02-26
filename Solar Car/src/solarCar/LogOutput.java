@@ -82,6 +82,10 @@ public class LogOutput {
 		txtLogSize = new Text(grpFilters, SWT.BORDER);
 		txtLogSize.setBounds(72, 57, 76, 21);
 		
+		Button btnRefresh = new Button(grpFilters, SWT.NONE);
+		btnRefresh.setBounds(379, 47, 75, 25);
+		btnRefresh.setText("Refresh");
+		
 		List listLogDisplay = new List(shlSettings, SWT.BORDER);
 		listLogDisplay.setBounds(10, 10, 464, 444);
 
