@@ -26,7 +26,7 @@ public class network {
 	Thread netThread = null;	
 	
 	//...NETWORK VARIABLES
-	private byte socketType = 'U'; /// U = UDP | T = TCP
+	private byte socketType = 'U'; /// U = UDP | T = TCP | P = RDPI
 	private short port = 4876;
 	private String ip = "239.255.60.60";
 	MulticastSocket sock =  null;
@@ -203,6 +203,9 @@ public class network {
 		return true;		
 	}
 	
+	public boolean OverridePort ( String newPort ) {		
+		return OverridePort (Short.parseShort(newPort));
+	}
 	public boolean OverridePort ( short newPort ) {
 		if (newPort<1 || newPort>65400) 
 			return false;
@@ -290,15 +293,18 @@ public class network {
 	    			  switch (m) {
 	    			  //.. 0x000 - 0x999
 	    			  case 0: //...MISC
+	    				  
 	    				  break;
 	    			
-	    			  case 1:	    				  
+	    			  case 1: //Battery packet
+	    				  
 	    				  break;
 	    				  
-	    			  case 2:
+	    			  case 2: //...
+	    				  
 	    				  break;
 	    				  
-	    			  case 3:	    				  
+	    			  case 3: //....	    				  
 	    				  break;
 	    				  
 	    			  default:
@@ -322,4 +328,10 @@ public class network {
     	updateExTime =( updateExEnd - updateExBegin );
     	return ret;
     }
+    
+    //...Get functions
+	public String getIpAddr() 		{return ip;	}
+	public String getPort() 		{return "" + port;	}
+	public String getNetworkType() 	{return "" + socketType;	}
+
 } 

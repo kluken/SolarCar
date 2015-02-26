@@ -143,6 +143,7 @@ public class Interface {
 		mntmSettings.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
+				Log.Log("Opening OPTIONS", Log.LOG_INFO );
 				Main.options.open();
 			}
 		});
@@ -150,6 +151,21 @@ public class Interface {
 		
 		MenuItem mntmExit = new MenuItem(menu_1, SWT.NONE);
 		mntmExit.setText("Exit");
+		
+		MenuItem mntmLog = new MenuItem(menu, SWT.NONE);
+		mntmLog.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+				Log.Log("Opening log display", Log.LOG_INFO );
+				Main.LogOut.open();
+			}
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				Log.Log("Opening log display", Log.LOG_INFO );
+				Main.LogOut.open();
+			}
+		});
+		mntmLog.setText("Log");
 		
 		//...Second Menu button - About
 		MenuItem mntmAbout = new MenuItem(menu, SWT.CASCADE);
@@ -304,7 +320,4 @@ public class Interface {
 		tbtmNetOverview.setControl(comp_netoverview);
 
 	}    
-
-	//...Network hook for debug?
-    
 }

@@ -1,5 +1,6 @@
 package solarCar;
 
+//...SWT Imports
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Group;
@@ -11,7 +12,19 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 
+import java.io.FileNotFoundException;
+import java.io.FileInputStream;
+//...Config
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Properties;
+
 public class Settings {
+	
+	//...Logging
+	private Surveillance Log = new Surveillance ( "SETTINGS" ); 
 
 	protected Shell shlSettings;
 	private Text txtNetIP;
@@ -35,6 +48,7 @@ public class Settings {
 
 	/**
 	 * Create contents of the window.
+	 * @wbp.parser.entryPoint
 	 */
 	protected void createContents() {
 		shlSettings = new Shell();
@@ -47,7 +61,7 @@ public class Settings {
 		grpNetwork.setBounds(10, 10, 414, 94);
 		
 		Label lblIp = new Label(grpNetwork, SWT.NONE);
-		lblIp.setBounds(10, 22, 55, 15);
+		lblIp.setBounds(10, 22, 20, 15);
 		lblIp.setText("IP:");
 		
 		Label lblPort = new Label(grpNetwork, SWT.NONE);
@@ -127,5 +141,90 @@ public class Settings {
 		grpSolarCar.setText("Solar Car");
 		grpSolarCar.setBounds(10, 192, 414, 132);
 
+	}
+	
+	public void destroy() {
+		
+	}
+	
+	//....Settings
+	public boolean settingsSave ( ) {
+		Properties prop = new Properties();
+		OutputStream output = null;
+		
+		try {
+			output = new FileOutputStream("config.properties");
+
+			// set the properties value
+			
+			//...Data base settings
+			prop.setProperty("database", "localhost");
+			prop.setProperty("dbuser", "solarcar");
+			prop.setProperty("dbpassword", "solarcar");	
+			
+			//...Network settings
+			prop.setProperty("netIpAddress", 	Main.net.getIpAddr() );
+			prop.setProperty("netPort", 		Main.net.getPort() );
+			prop.setProperty("netType", 		Main.net.getNetworkType() );
+			
+			// save properties to project root folder
+			prop.store(output, null);
+			
+		
+		} catch (IOException e) {
+			Log.Log("IOException Saving Settings", Log.LOG_WARNING);
+			return false;
+		} finally {
+			if (output != null) {
+				try {
+					output.close();
+				} catch (IOException e) {
+					Log.Log("IOException Closing Settings File", Log.LOG_WARNING);
+					return false;
+				}
+			}
+	 
+		}
+		
+		//...Success
+		return true;
+	}
+	
+	public boolean settingsLoad ( ) {
+		//...Save the settings
+		Properties prop = new Properties();
+		InputStream input = null;
+	 
+		try {
+	 
+			input = new FileInputStream("config.properties");
+	 
+			// load a properties file
+			prop.load(input);
+	 
+			//...Get database
+			prop.getProperty("database");
+			prop.getProperty("dbuser");
+			prop.getProperty("dbpassword");
+			
+			//Network			
+			Main.net.OverrideIP(prop.getProperty("netIpAddress"));
+			Main.net.OverridePort(prop.getProperty("netPort" ));
+			
+			prop.getProperty("netType");
+	 
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} finally {
+			if (input != null) {
+				try {
+					input.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		return true;
 	}
 }

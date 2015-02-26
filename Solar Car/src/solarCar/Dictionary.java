@@ -2600,18 +2600,18 @@ public class Dictionary
 		//Store the key and array in the HashMap
 		data.put("0x1ef", temp);	
 		
-		
+		//...Debugging
 		if (J_DEBUG)
 		{
-			Log.Log ( "Begin log Contents");
+			Log.Log ( "Begin log Contents" , Surveillance.LOG_HIDEBUG  );
 			Iterator iterator = data.keySet().iterator();  
 			while (iterator.hasNext()) 
 			{
 			   String key = iterator.next().toString();
-			   String value = data.get(key)[0];
-			   Log.Log( key + " " + value);
+			   String value = data.get(key)[1];
+			   Log.Log( key + " " + value , Surveillance.LOG_HIDEBUG );
 			}
-			Log.Log ( "End log Contents");
+			Log.Log ( "End log Contents" , Surveillance.LOG_HIDEBUG );
 		}
 
 	}

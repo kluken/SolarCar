@@ -7,15 +7,18 @@ public class Main
 	protected static network net = null;
 	protected static Settings options = null;
 	private static Surveillance Log = new Surveillance("MAIN");
+	protected static LogOutput LogOut = null;
 	
 	public static void main(String[] args)
 	{
 		//...GENSIS
-		Log.Log ("Calling Initlization functions");
+		Log.Log ("Initlization" , Log.LOG_ENTRY );
 		window = new Interface();		
 		net = new network();
 		options = new Settings();
+		LogOut =  new LogOutput();
 		
+		options.settingsLoad();
 		window.initilise();
 		net.initlise(); ///...Initlise network side:
 		
@@ -23,10 +26,12 @@ public class Main
 		run();
 		
 		///...REVERLATIONS
-		Log.Log ("Calling destroy functions");
+		Log.Log ("Destroying" , Log.LOG_ENTRY );
 		net.destroy();
 		window.destroy();
-		Log.Log (" Good Byte :)");
+		options.settingsSave();
+		
+		Log.Log (" Good Byte :)" , Log.LOG_ENTRY );
 		System.exit(0);
 		//...Successful end ...//
 	}
@@ -43,7 +48,7 @@ public class Main
 			//...Call GUI UPDATES
 			net.netGuiUpdate ( window );
 		}
-		Log.Log ("Exit core run function");
+		Log.Log ("Exit core run function" , Log.LOG_ENTRY );
 	}
 	
 	//...Application load
