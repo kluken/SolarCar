@@ -18,6 +18,9 @@ public class Main
 		options = new Settings();
 		LogOut =  new LogOutput();
 		
+		//...Loading?
+		
+		
 		options.settingsLoad();
 		window.initilise();
 		net.initlise(); ///...Initlise network side:

@@ -108,11 +108,6 @@ public class netPacket {
 			}
 			return;
 		}
-		//...End result:
-		/*Log.Log ("Packet: BusID ("
-									+Integer.toHexString(bus_id)+") | client_id("
-									+Integer.toString(client_id)+") | packet_id("
-									+Integer.toString(packet_id)+"");*/
 	}
 	
 	public boolean isFlagged() {

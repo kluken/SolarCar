@@ -10,10 +10,16 @@ import java.util.Queue;
 
 import javax.swing.*;
 
+/**
+ * @deprecated
+ * @author Matt Richardson
+ *
+ */
 public class network {
 	/**
 	 * Type: Boolean
 	 * Info: Flag used to determine TCP or UDP CONNECTION
+	 * 
 	 */
 	
 	static private boolean locked = false;
