@@ -227,4 +227,31 @@ public class Settings {
 		
 		return true;
 	}
+	
+	/**
+	 * getSettings pulls settings from the GUI to apply
+	 * @return could we successfully grab settings?
+	 */
+	private boolean getSettings ( ){
+		
+		//...Get network settings
+		
+		
+		//...Pull File settings
+		
+		return true;
+	}
+	/**
+	 * 
+	 * @return set the appropriate fields on the gui from the classes
+	 */
+	private boolean setSettings ( ) {
+		//...Set network settings
+		advNetwork n = Main.net;
+		txtNetIP.setText( n.getIpAddr() );
+		txtNetPort.setText( n.getPort() );
+		
+		
+		return true;
+	}
 }

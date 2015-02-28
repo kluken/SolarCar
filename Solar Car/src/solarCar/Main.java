@@ -1,20 +1,26 @@
 package solarCar;
 
+import solarCar.Hardware.*;
+
 public class Main
 {
 	//...GENSIS
 	protected static Interface window = null;	
-	protected static network net = null;
+	protected static advNetwork net = null;
 	protected static Settings options = null;
 	private static Surveillance Log = new Surveillance("MAIN");
 	protected static LogOutput LogOut = null;
+	
+	
+	//...Hardware classes
+	protected static BatteryPack pBatteryPack = null;
 	
 	public static void main(String[] args)
 	{
 		//...GENSIS
 		Log.Log ("Initlization" , Log.LOG_ENTRY );
 		window = new Interface();		
-		net = new network();
+		net = new advNetwork();
 		options = new Settings();
 		LogOut =  new LogOutput();
 		
@@ -52,6 +58,11 @@ public class Main
 			net.netGuiUpdate ( window );
 		}
 		Log.Log ("Exit core run function" , Log.LOG_ENTRY );
+	}
+	
+	private static void forceAllGuiUpdate(){
+		//...Call GUI UPDATES
+		net.netGuiUpdate ( window );
 	}
 	
 	//...Application load

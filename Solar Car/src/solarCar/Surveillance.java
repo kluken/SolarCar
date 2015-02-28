@@ -233,4 +233,9 @@ public class Surveillance {
     	else 
     		LoggIt ( line );
 	}
+
+	public void test() {
+		// TODO Auto-generated method stub
+		Log ( "TEST!" , this.LOG_INFO );
+	}
 }

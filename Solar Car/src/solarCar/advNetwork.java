@@ -1,4 +1,5 @@
 package solarCar;
+import solarCar.common.*;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -6,9 +7,14 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.Timer;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+
+import org.eclipse.swt.widgets.Display;
+
+
 
 
 
@@ -46,7 +52,7 @@ public class advNetwork {
 	
 	//....Class variables	
 	static private boolean locked = false;
-	Surveillance Log = new Surveillance( "NETWORK");
+	Surveillance Log = new Surveillance( "NETWORK" );
 	
 	//...Network packet buffer
 	private Queue <netPacket> packetQueue;
@@ -70,11 +76,12 @@ public class advNetwork {
 	 * 
 	 * */
 	//...Network statistics
-	private int stat_PacketRate,stat_PacketCount,stat_DataRate,stat_DataCount,stat_ThreadLoad;
+	private double stat_PacketRate,stat_PacketCount,stat_DataRate,stat_DataCount,stat_ThreadLoad;
+	
 		
 	//...Timer
-	private advTimer netTimer;
-	private advTimer netThreadTimer;
+	private advTimer  netTimer;	
+	private advTimer  netThreadTimer;
 	
     //...Dictionary
     private Dictionary dic = new Dictionary();
@@ -103,6 +110,7 @@ public class advNetwork {
 		//..Create socket ( of type )
 		sock = new netSocket ( socketType );
 		ret = sock.connect( ip ,  port );
+		assert ( ret > 0 );
 		
 		//...Create thread
 		netThread = new Thread ( new advNetThread () );
@@ -125,7 +133,7 @@ public class advNetwork {
 		//...Clean up the sockets
 		locked = false;
 		sock.close(true);	
-		Log.Log ("Network Destroyed" , Log.LOG_INFO );
+		Log.Log ("Network Destroyed" , Surveillance.LOG_INFO );
 		//...success clean up
 		return 0;
 	}
@@ -143,31 +151,36 @@ public class advNetwork {
 			double delta = 0,t;
 			
 			byte[] data = new byte[netSocket.MAX_BUFFER];
-			int len=0;
+			int len=0; 
+			
+			//...Thread performance
+			long n,l;
 
-			//...Infite loop. Exits up error or interrupt
+			//...infinitive loop. Exits up error or interrupt
 			while ( run ) {
+				n = System.nanoTime();
 				//...Check for data??
 				len = sock.recv(data, len);
 				if ( len > 0 ) {
 					//...Packet it
-		            netPacket newPacket = new netPacket( data );
+					packet = new netPacket( data );
 		            
 		            ///....Handle packet system. 	
-		            packetQueue.add( newPacket );  // <--- ERRROR?  
+		            packetQueue.add( packet );  // <--- ERRROR?  
 					
-					//...Stats
+					//...statistical
 					stat_DataRate += len;					stat_DataCount += len;
 					stat_PacketRate++;						stat_PacketCount++;
+					packet = null; data[0]='\n';
+				
 				}
 				else{
 					//...No data. do something productive.
 				}
-				
-				//...Thread load;
-				delta = netThreadTimer.deltaTime();
-				t = stat_DataRate * delta; stat_DataRate = (int)t;
-				t = stat_PacketRate * delta; stat_PacketRate = (int)t;
+							
+				l = (long) netThreadTimer.timeNow();
+				delta = (double)(l - n);
+				stat_ThreadLoad = util.roundEx(netThreadTimer.nanoToMili( delta ),2);
 			}
 			
 			//...return how much data has been received			
@@ -177,9 +190,9 @@ public class advNetwork {
 	
     //...Interface can call this 
     protected synchronized void netGuiUpdate ( final Interface interfaceThread ){
-    	//...Update network related infomation:
+    	//...Update network related information:
     	
-    	interfaceThread.display.getDefault().asyncExec(new Runnable() 
+    	Display.getDefault().asyncExec(new Runnable() 
     	{
     		 public void run() {
     			//...PER SECOND
@@ -192,6 +205,19 @@ public class advNetwork {
     		    	interfaceThread.txtNetLoad.setText ( stat_ThreadLoad + "ms");
     		 }
     	});
+    	guiResetStats();
+    }
+    
+    private double _guiResetTime;
+    private void guiResetStats ( ){
+		//...Stats can only 
+    	double n = netTimer.timeNow(),d;
+    	d = ( n - _guiResetTime );
+    	if ( d >= 1000 ) {
+    		//...Reset stat
+    		stat_DataRate = 0;
+    		stat_PacketRate =0;
+    	}
     }
     
     public int update () {
@@ -199,7 +225,7 @@ public class advNetwork {
     	int ret = 0,m=0;
     	String key = "";
     	netPacket packet = null;
-    	
+    	    	
     	///....Check first
     	try {			
     		//...Pull packets
@@ -212,13 +238,16 @@ public class advNetwork {
 	    			  switch (m) {
 	    			  //.. 0x000 - 0x999
 	    			  case 0:	break;
-	    			  case 1: 	break;
+	    			  case 1: 	
+	    				  	Main.pBatteryPack.pushFromNetwork( packet );
+	    				  break;
 	    			  case 2: 	break;
 	    			  case 3:   break;
 	    			 default:   Log.Log("");  break;
 	    			  }
 	    		}else{
 	    			//...Unknown key for dictonary
+	    			//Log.Log("Unknow packet: "+ key , Surveillance.LOG_WARNING );
 	    			
 	    		}
     		}
@@ -286,6 +315,7 @@ public class advNetwork {
 	public boolean OverrideIP ( String newIp ) {
 		//...is the string empty?
 		if (newIp == null) return false;
+		if (newIp == ip)return false;
 		
 		//...ADV - Valid IP? AAA.BBB.CCC.DDD
 		Log.Log ("IP OVERRIDE: " + ip + " to " + newIp );		
@@ -303,5 +333,10 @@ public class advNetwork {
 		//...success
 		return true;
 	}
+	
+    //...Get functions
+	public String getIpAddr() 		{return ip;	}
+	public String getPort() 		{return "" + port;	}
+	public String getNetworkType() 	{return "" + socketType;	}
 
 }

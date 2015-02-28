@@ -21,7 +21,7 @@ import java.util.Arrays;
  */
 public class netSocket {
 	
-	private Surveillance Log = new Surveillance();
+	private Surveillance Log = new Surveillance("SOCKET");
 	
 	/** SOCK_UDP - Socket type udp */
 	protected static final char SOCK_UDP =  'U';			//...UDP CONNECTIONLESS
@@ -77,8 +77,8 @@ public class netSocket {
 		int ret = 0;
 		
 		//...Check sock state:
-		if ( socketType != SOCK_NULL ) {
-			Log.Log("[CONNECT] Socket is already in use!", Surveillance.LOG_WARNING );
+		if ( socketType == SOCK_NULL ) {
+			Log.Log("[CONNECT] Socket is of unknown type!!!", Surveillance.LOG_WARNING );
 			return -SOCK_NULL;
 		}
 		try {
@@ -91,9 +91,10 @@ public class netSocket {
 				break;
 				
 				case SOCK_UDP_MULTICAST:
-					sockUdpMC = new MulticastSocket( portnum );
-					address = InetAddress.getByName( ipaddr );
-					sockUdpMC.joinGroup(address);						
+					sockUdpMC = new MulticastSocket( portnum ); // Multi-cast socket
+					address = InetAddress.getByName( ipaddr );	// Get multicast address
+					sockUdpMC.joinGroup(address);				// Connect to multicast
+					
 				break;
 				
 				case SOCK_TCP:
@@ -247,18 +248,26 @@ public class netSocket {
 	//...RECV
 	public int recv ( byte[] data , int len ){
 		int ret=0; // -X error +X size
-		byte[] buff = new byte[this.MAX_BUFFER];
+		DatagramPacket rp = null;
+		
 		//...Socket create
 		try {
 			switch ( socketType ){
 				//....UDP Recv
-				case SOCK_UDP:		
-				case SOCK_UDP_MULTICAST:
-					DatagramPacket rp = new DatagramPacket(buff, buff.length);
+				case SOCK_UDP:	
+					//...Udp
+		            rp = new DatagramPacket(data, data.length);
 					sockUdp.receive(rp);
-					ret = rp.getLength();
-					len = ret;
+					len = ret = rp.getLength();
 					System.arraycopy(rp.getData(), 0, data, 0, len);
+					
+				case SOCK_UDP_MULTICAST:
+					//...Udp
+		            rp = new DatagramPacket(data, data.length);
+					sockUdpMC.receive(rp);
+					len = ret = rp.getLength();
+					System.arraycopy(rp.getData(), 0, data, 0, len);
+					
 				break;	
 				
 				case SOCK_TCP:
@@ -275,6 +284,12 @@ public class netSocket {
 			// TODO Auto-generated catch block
 			ret = -1;
 			Log.Log("[RECV] Sock IO Exception! : "+ e.getMessage() , Surveillance.LOG_WARNING);	
+		} catch ( NullPointerException e ){
+			ret = -2;
+			Log.Log( "NullPointer Exception! : ", Surveillance.LOG_SEVERE );
+			e.printStackTrace();
+			Log.Log( " CRITICAL EXCEPTION! ");
+			System.exit(-1);
 		}
 		return ret;
 	}
