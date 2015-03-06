@@ -19,6 +19,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Properties;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Combo;
@@ -28,8 +29,10 @@ public class LogOutput {
 	//...Logging
 	private Surveillance Log = new Surveillance ( "LOG_OUTPUT" ); 
 
-	protected Shell shlSettings;
+	protected Shell shlLogOutput;
 	private Text txtLogSize;
+	private List listLogDisplay;
+	private Combo comboFilterLevel;
 
 	/**
 	 * Open the window.
@@ -37,21 +40,58 @@ public class LogOutput {
 	public void open() {
 		Display display = Display.getDefault();
 		createContents();
-		shlSettings.open();
-		shlSettings.layout();
-		while (!shlSettings.isDisposed()) {
+		setup();
+		shlLogOutput.open();
+		shlLogOutput.layout();
+		
+		
+		
+		while (!shlLogOutput.isDisposed()) {
 			if (!display.readAndDispatch()) {
 				display.sleep();
 			}
 		}
 	}
 	
-	//...Log List
+	private void setup ( ){
+		filledLogWindow(0);
+		filledLogLevel ();
+		
+		
+	}
+
+	//...Fill out log display
+	protected synchronized void filledLogLevel ( ){
+		Display.getDefault().asyncExec(new Runnable() 
+    	{
+	    	public void run()
+	    	{
+				//...Basic fill log window
+				for ( int i=0;i<Surveillance.LOG_HIDEBUG;i++){
+					comboFilterLevel.add( Surveillance.getLogLevelStr(i) );				
+				}
+	    	}
+    	});
+	} 
+    	
 	
 	//...Fill out log display
-	protected void filledLogWindow ( int filterLevel ){
-		//...Basic fill log window
-		
+	protected synchronized void filledLogWindow ( int filterLevel ){
+		Display.getDefault().asyncExec(new Runnable() 
+    	{
+	    	public void run()
+	    	{
+	    		if (listLogDisplay.isDisposed()) return;
+				//...Basic fill log window
+				ArrayList<?> tLog =  Surveillance.getLogs();
+				
+				for ( int i = 0; i<tLog.size();i++){
+					//...Fill log
+					listLogDisplay.add( (String) tLog.get(i) );
+				}				
+			
+	    	}	    	
+    	});	
 	}
 
 	/**
@@ -59,12 +99,12 @@ public class LogOutput {
 	 * @wbp.parser.entryPoint
 	 */
 	protected void createContents() {
-		shlSettings = new Shell();
-		shlSettings.setMinimumSize(new Point(256, 384));
-		shlSettings.setSize(500, 590);
-		shlSettings.setText("Settings");
+		shlLogOutput = new Shell();
+		shlLogOutput.setMinimumSize(new Point(256, 384));
+		shlLogOutput.setSize(500, 590);
+		shlLogOutput.setText("Settings");
 		
-		Group grpFilters = new Group(shlSettings, SWT.NONE);
+		Group grpFilters = new Group(shlLogOutput, SWT.NONE);
 		grpFilters.setText("Filters");
 		grpFilters.setBounds(10, 460, 464, 82);
 		
@@ -72,7 +112,7 @@ public class LogOutput {
 		lblFilterLevel.setBounds(10, 20, 56, 15);
 		lblFilterLevel.setText("Filter Level");
 		
-		Combo comboFilterLevel = new Combo(grpFilters, SWT.NONE);
+		comboFilterLevel = new Combo(grpFilters, SWT.NONE);
 		comboFilterLevel.setBounds(72, 12, 91, 23);
 		
 		Label lblLogSize = new Label(grpFilters, SWT.NONE);
@@ -83,96 +123,24 @@ public class LogOutput {
 		txtLogSize.setBounds(72, 57, 76, 21);
 		
 		Button btnRefresh = new Button(grpFilters, SWT.NONE);
+		btnRefresh.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				Log.Log("Refresh Log", Surveillance.LOG_INFO );
+				filledLogWindow(0);
+			}
+		});
 		btnRefresh.setBounds(379, 47, 75, 25);
 		btnRefresh.setText("Refresh");
 		
-		List listLogDisplay = new List(shlSettings, SWT.BORDER);
+		listLogDisplay = new List(shlLogOutput, SWT.BORDER |  SWT.V_SCROLL);
 		listLogDisplay.setBounds(10, 10, 464, 444);
-
+	    
 	}
 	
 	public void destroy() {
 		
 	}
 	
-	//....Settings
-	public boolean settingsSave ( ) {
-		Properties prop = new Properties();
-		OutputStream output = null;
-		
-		try {
-			output = new FileOutputStream("config.properties");
-
-			// set the properties value
-			
-			//...Data base settings
-			prop.setProperty("database", "localhost");
-			prop.setProperty("dbuser", "solarcar");
-			prop.setProperty("dbpassword", "solarcar");	
-			
-			//...Network settings
-			prop.setProperty("netIpAddress", 	Main.net.getIpAddr() );
-			prop.setProperty("netPort", 		Main.net.getPort() );
-			prop.setProperty("netType", 		Main.net.getNetworkType() );
-			
-			// save properties to project root folder
-			prop.store(output, null);
-			
-		
-		} catch (IOException e) {
-			Log.Log("IOException Saving Settings", Log.LOG_WARNING);
-			return false;
-		} finally {
-			if (output != null) {
-				try {
-					output.close();
-				} catch (IOException e) {
-					Log.Log("IOException Closing Settings File", Log.LOG_WARNING);
-					return false;
-				}
-			}
-	 
-		}
-		
-		//...Success
-		return true;
-	}
 	
-	public boolean settingsLoad ( ) {
-		//...Save the settings
-		Properties prop = new Properties();
-		InputStream input = null;
-	 
-		try {
-	 
-			input = new FileInputStream("config.properties");
-	 
-			// load a properties file
-			prop.load(input);
-	 
-			//...Get database
-			prop.getProperty("database");
-			prop.getProperty("dbuser");
-			prop.getProperty("dbpassword");
-			
-			//Network			
-			Main.net.OverrideIP(prop.getProperty("netIpAddress"));
-			Main.net.OverridePort(prop.getProperty("netPort" ));
-			
-			prop.getProperty("netType");
-	 
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		} finally {
-			if (input != null) {
-				try {
-					input.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-		
-		return true;
-	}
 }

@@ -148,85 +148,85 @@ public class Settings {
 	}
 	
 	//....Settings
-	public boolean settingsSave ( ) {
-		Properties prop = new Properties();
-		OutputStream output = null;
-		
-		try {
-			output = new FileOutputStream("config.properties");
+		public boolean settingsSave ( ) {
+			Properties prop = new Properties();
+			OutputStream output = null;
+			
+			try {
+				output = new FileOutputStream("config.properties");
 
-			// set the properties value
+				// set the properties value
+				
+				//...Data base settings
+				prop.setProperty("database", "localhost");
+				prop.setProperty("dbuser", "solarcar");
+				prop.setProperty("dbpassword", "solarcar");	
+				
+				//...Network settings
+				prop.setProperty("netIpAddress", 	Main.net.getIpAddr() );
+				prop.setProperty("netPort", 		Main.net.getPort() );
+				prop.setProperty("netType", 		Main.net.getNetworkType() );
+				
+				// save properties to project root folder
+				prop.store(output, null);
+				
 			
-			//...Data base settings
-			prop.setProperty("database", "localhost");
-			prop.setProperty("dbuser", "solarcar");
-			prop.setProperty("dbpassword", "solarcar");	
-			
-			//...Network settings
-			prop.setProperty("netIpAddress", 	Main.net.getIpAddr() );
-			prop.setProperty("netPort", 		Main.net.getPort() );
-			prop.setProperty("netType", 		Main.net.getNetworkType() );
-			
-			// save properties to project root folder
-			prop.store(output, null);
-			
-		
-		} catch (IOException e) {
-			Log.Log("IOException Saving Settings", Log.LOG_WARNING);
-			return false;
-		} finally {
-			if (output != null) {
-				try {
-					output.close();
-				} catch (IOException e) {
-					Log.Log("IOException Closing Settings File", Log.LOG_WARNING);
-					return false;
+			} catch (IOException e) {
+				Log.Log("IOException Saving Settings", Log.LOG_WARNING);
+				return false;
+			} finally {
+				if (output != null) {
+					try {
+						output.close();
+					} catch (IOException e) {
+						Log.Log("IOException Closing Settings File", Log.LOG_WARNING);
+						return false;
+					}
 				}
+		 
 			}
-	 
+			
+			//...Success
+			return true;
 		}
 		
-		//...Success
-		return true;
-	}
-	
-	public boolean settingsLoad ( ) {
-		//...Save the settings
-		Properties prop = new Properties();
-		InputStream input = null;
-	 
-		try {
-	 
-			input = new FileInputStream("config.properties");
-	 
-			// load a properties file
-			prop.load(input);
-	 
-			//...Get database
-			prop.getProperty("database");
-			prop.getProperty("dbuser");
-			prop.getProperty("dbpassword");
-			
-			//Network			
-			Main.net.OverrideIP(prop.getProperty("netIpAddress"));
-			Main.net.OverridePort(prop.getProperty("netPort" ));
-			
-			prop.getProperty("netType");
-	 
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		} finally {
-			if (input != null) {
-				try {
-					input.close();
-				} catch (IOException e) {
-					e.printStackTrace();
+		public boolean settingsLoad ( ) {
+			//...Save the settings
+			Properties prop = new Properties();
+			InputStream input = null;
+		 
+			try {
+		 
+				input = new FileInputStream("config.properties");
+		 
+				// load a properties file
+				prop.load(input);
+		 
+				//...Get database
+				prop.getProperty("database");
+				prop.getProperty("dbuser");
+				prop.getProperty("dbpassword");
+				
+				//Network			
+				Main.net.OverrideIP(prop.getProperty("netIpAddress"));
+				Main.net.OverridePort(prop.getProperty("netPort" ));
+				
+				prop.getProperty("netType");
+		 
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			} finally {
+				if (input != null) {
+					try {
+						input.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 				}
 			}
+			
+			return true;
 		}
-		
-		return true;
-	}
 	
 	/**
 	 * getSettings pulls settings from the GUI to apply

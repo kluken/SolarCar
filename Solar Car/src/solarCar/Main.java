@@ -10,10 +10,10 @@ public class Main
 	protected static Settings options = null;
 	private static Surveillance Log = new Surveillance("MAIN");
 	protected static LogOutput LogOut = null;
-	
-	
+		
 	//...Hardware classes
 	protected static BatteryPack pBatteryPack = null;
+	protected static MiscData  pMisc = null;
 	
 	public static void main(String[] args)
 	{
@@ -24,12 +24,14 @@ public class Main
 		options = new Settings();
 		LogOut =  new LogOutput();
 		
-		//...Loading?
+		//...Hardware
+		pBatteryPack = new BatteryPack();
+		pMisc = new MiscData();
 		
-		
+		//...Loading		
 		options.settingsLoad();
 		window.initilise();
-		net.initlise(); ///...Initlise network side:
+		net.initlise();
 		
 		///...MAIN SECTION
 		run();

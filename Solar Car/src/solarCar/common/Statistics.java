@@ -88,7 +88,7 @@ public final class Statistics {
 
  /* MODE */
 
- private static class ModeCompute <T extends Number> {
+ public static class ModeCompute <T extends Number> {
      private Map<T, Integer> map = new HashMap<T, Integer>();
      private int maxFrequency = 0;
 

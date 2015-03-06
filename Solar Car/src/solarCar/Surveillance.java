@@ -35,6 +35,10 @@ public class Surveillance {
 	private static String logExt = ".logs";
 	private static int LOG_MAX_AMOUNT = 128;
 	
+	protected static ArrayList getLogs ( ) {
+		return staticLog ;
+	}
+	
 	//...Static log - all the logs combined
 	private static int getLogCount ( ) {
 		return staticLog.size();
@@ -59,6 +63,8 @@ public class Surveillance {
 		
 		return false;
 	}
+	
+	
 	
 	
 	//...Debug Level
@@ -119,6 +125,22 @@ public class Surveillance {
 	public static String getLogLevelStr() {
 		String ret="";
 		switch (setLogLevel ){
+			case LOG_SEVERE:	ret = "SERVE";						break;
+			case LOG_ERROR:		ret = "ERROR";						break;
+			case LOG_WARNING:	ret = "WARNING";					break;
+			case LOG_INFO:		ret = "INFO";						break;
+			case LOG_ENTRY:		ret = "ENTRY";						break;
+			case LOG_PARM :		ret = "PARAMTERS";					break;
+			case LOG_DEBUG :	ret = "DEBUG";						break;
+			case LOG_HIDEBUG : 	ret = "HLDEBUG";					break;
+			default: ret = "UNKNOWN"; break;
+		}
+		return ret;
+	}
+	
+	public static String getLogLevelStr( int level ) {
+		String ret="";
+		switch (level ){
 			case LOG_SEVERE:	ret = "SERVE";						break;
 			case LOG_ERROR:		ret = "ERROR";						break;
 			case LOG_WARNING:	ret = "WARNING";					break;

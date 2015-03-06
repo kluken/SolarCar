@@ -27,7 +27,7 @@ public class advTimer {
 		delta = 0;
 	}
 	
-	private long getTime() {
+	public static long getTime() {
 		return System.nanoTime();
 	}
 	
@@ -77,5 +77,8 @@ public class advTimer {
 	public double nanoToMili ( double delta ) {
 		return delta / NANO_TO_SECOND;
 	}
+	
+	//...Time marker
+	
 	
 }

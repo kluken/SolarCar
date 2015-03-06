@@ -76,8 +76,8 @@ public class advNetwork {
 	 * 
 	 * */
 	//...Network statistics
-	private double stat_PacketRate,stat_PacketCount,stat_DataRate,stat_DataCount,stat_ThreadLoad;
-	
+	private double stat_PacketCount,stat_DataCount,stat_ThreadLoad;
+	private statTrack stat_PacketRate = new statTrack(),stat_DataRate = new statTrack();
 		
 	//...Timer
 	private advTimer  netTimer;	
@@ -87,9 +87,9 @@ public class advNetwork {
     private Dictionary dic = new Dictionary();
 	
 	private void statsReset ( ) {
-		stat_PacketRate=0;
+		stat_PacketRate.clear();
+		stat_DataRate.clear();
 		stat_PacketCount=0;
-		stat_DataRate=0;
 		stat_DataCount=0;
 		stat_ThreadLoad=0;
 	}
@@ -169,8 +169,8 @@ public class advNetwork {
 		            packetQueue.add( packet );  // <--- ERRROR?  
 					
 					//...statistical
-					stat_DataRate += len;					stat_DataCount += len;
-					stat_PacketRate++;						stat_PacketCount++;
+					stat_DataRate.addMark(len);					stat_DataCount += len;
+					stat_PacketRate.addMark();						stat_PacketCount++;
 					packet = null; data[0]='\n';
 				
 				}
@@ -196,8 +196,8 @@ public class advNetwork {
     	{
     		 public void run() {
     			//...PER SECOND
-    		    	interfaceThread.txtNetDataRecv.setText( stat_DataRate + " bytes" );
-    		    	interfaceThread.txtNetPacketsSecond.setText( stat_PacketRate + "");
+    		    	interfaceThread.txtNetDataRecv.setText( stat_DataRate.getRateV() + " bytes" );
+    		    	interfaceThread.txtNetPacketsSecond.setText( stat_PacketRate.getRate() + "");
     		    	interfaceThread.txtNetConnectionState.setText( state );
     		    	
     		    	//...TOTAL
@@ -205,19 +205,14 @@ public class advNetwork {
     		    	interfaceThread.txtNetLoad.setText ( stat_ThreadLoad + "ms");
     		 }
     	});
-    	guiResetStats();
+   
     }
     
     private double _guiResetTime;
     private void guiResetStats ( ){
-		//...Stats can only 
-    	double n = netTimer.timeNow(),d;
-    	d = ( n - _guiResetTime );
-    	if ( d >= 1000 ) {
     		//...Reset stat
-    		stat_DataRate = 0;
-    		stat_PacketRate =0;
-    	}
+    		stat_DataRate.update();
+    		stat_PacketRate.update();    	
     }
     
     public int update () {
@@ -237,12 +232,18 @@ public class advNetwork {
 	    			  m =  Integer.parseInt(dic.data.get(key)[1]);
 	    			  switch (m) {
 	    			  //.. 0x000 - 0x999
-	    			  case 0:	break;
+	    			  case 0:	
+	    			  		Main.pMisc.pushFromNetwork( packet );
+	    			  		break;
 	    			  case 1: 	
 	    				  	Main.pBatteryPack.pushFromNetwork( packet );
+	    				  	break;
+	    			  case 2: 	
+	    				  
 	    				  break;
-	    			  case 2: 	break;
-	    			  case 3:   break;
+	    			  case 3: 
+	    				  
+	    				  break;
 	    			 default:   Log.Log("");  break;
 	    			  }
 	    		}else{
