@@ -1,6 +1,7 @@
 package solarCar.common;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,13 +12,17 @@ public class statTrack {
 	private int MAX_ELEMENTS = 256;
 	private int MAX_TIME     = 1000; //...1000ms
     private Map<Long, Integer> list = null;
+    private ArrayList<Long>Keys = null;
+    private ArrayList<Integer>Values = null;
 	
 	public statTrack ( ) {
 		list = new HashMap<Long, Integer>();
+	    Keys = new ArrayList<Long>();
+	    Values = new ArrayList<Integer>();
 	}
 	
 	//...Tick marker
-	private long getTime ( ) {
+	public static long getTime ( ) {
 		return System.currentTimeMillis();
 	}
 	
@@ -30,43 +35,66 @@ public class statTrack {
 	//...Count
 	public long getRateV (  ) {
 		//...Check index
-		update();
 		return getValeAll();
 	}
 	
-	public void update ( ) {
-		//...Check index
-		ArrayList<Long>keys = new  ArrayList<Long>(list.keySet());
+	public void update ( ) {	
+		//...Counters
 		long c,t=getTime();
-		for ( int i=keys.size()-1;i>=0;i--){
-			c = (long)keys.get(i)+MAX_TIME;
-			if ( c < t ){ list.remove(keys.get(i)); }
-		}
+		//...Loop through Keys
+		for ( int i=0; i<Keys.size();i++){
+			c = (long)Keys.get(i)+MAX_TIME;	//...Get the value
+			//...If Log is less than time. then remove.
+			if ( c < t ){ 
+				Keys.remove(i);
+				Values.remove(i);
+			}else{
+				/*
+				 * Theory: Array List is ordered.
+				 * If reach an un-expired element. the rest are the same.
+				 * */
+				i = Keys.size();				
+			}
+		}		
 	}
 	
 	public long getCount ( ) {
-		return list.size();
+		return Keys.size();
 	}
 	
 	public void addMark ( ) {
-		list.put(getTime() , 0 );
+		//list.put(getTime() , 0 );
+		Keys.add( getTime() );
+		Values.add(0);
 	}
 	public void addMark ( int len ) {
-		list.put(getTime() , len );
+		Keys.add( getTime() );
+		Values.add(len);
 	}
 	
 	public int getValue ( int key ) {
-		return list.get(key);		
+		return Values.get(Keys.indexOf(key));		
 	}
 	
 	public int getValeAll ( ) {
-		ArrayList<Long>keys = new  ArrayList<Long>(list.keySet());
-		long c=0,t=getTime();int v=0;
-		for ( int i=keys.size()-1;i>=0;i--){
-			c = (long)keys.get(i);
-			v+= list.get(c);
-		}
-		return v;
+		//...Counters
+		long c,t=getTime();int v=0;
+		//...Loop through Keys
+		for ( int i=0; i<Keys.size();i++){
+			c = (long)Keys.get(i)+MAX_TIME;	//...Get the value
+			//...If Log is less than time. then remove.
+			if ( c < t ){ 
+				Keys.remove(i);
+				Values.remove(i);
+			}else{
+				/*
+				 * Theory: Array List is ordered.
+				 * If reach an un-expired element. the rest are the same.
+				 * */
+				v+=Values.get(i);			
+			}
+		}	
+		return v;		
 	}
 	
 	public void clear() {

@@ -325,7 +325,7 @@ public class netSocket {
 				Log.Log("[IS_CONNECTED] Socket is UDP Connectionless!!!", Surveillance.LOG_WARNING);
 			break;
 			case SOCK_UDP_MULTICAST:
-				ret = sockUdp.isConnected();
+				ret = sockUdpMC.isConnected();
 			break;
 			case SOCK_TCP:
 				ret = sockTcpClient.isConnected();

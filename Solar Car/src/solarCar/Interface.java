@@ -55,8 +55,16 @@ public class Interface {
 	protected Text txtOverBatteryHealth;
 	protected Display display = null;
 	
+	//...Tab Folder
+	protected TabFolder tabFolder;
+	protected TabItem tbtmOverview;
+	
+	//...Compisite Graph
+	protected Composite cmpsite_GraphLoad;
+	
 	//...GUI Threading
 	Thread threadit = null;
+	protected Text txtMainThreadLoad;
 
 	private class InterfaceThread implements Runnable {
 		public synchronized void run() {
@@ -77,7 +85,8 @@ public class Interface {
 				}
 			
 			}catch (SWTException ex){
-				Log.Log ( "Thread exception! | Cause: " + ex.getCause() + " \n\tMessage: " + ex.getMessage());
+				Log.Log ( "Thread exception! | Cause: " + ex.getCause() + " \n\tMessage: " + ex.getMessage() );
+				ex.printStackTrace();
 			}
 			
 			Log.Log ( "Thread Offline");
@@ -207,10 +216,10 @@ public class Interface {
 		
 		//########################################################
 		// 				TAB SECTION								//
-		TabFolder tabFolder = new TabFolder(shlSolarCar, SWT.NONE);
+		tabFolder = new TabFolder(shlSolarCar, SWT.NONE);
 		tabFolder.setBounds(174, 10, 568, 434);
 		
-		TabItem tbtmOverview = new TabItem(tabFolder, SWT.NONE);
+		tbtmOverview = new TabItem(tabFolder, SWT.NONE);
 		tbtmOverview.setText("Overview");
 		
 		Composite comp_overview = new Composite(tabFolder, SWT.NONE);
@@ -257,6 +266,21 @@ public class Interface {
 		txtOverBatteryHealth = new Text(grpOverviewBattery, SWT.BORDER | SWT.READ_ONLY | SWT.CENTER);
 		txtOverBatteryHealth.setText("GOOD");
 		txtOverBatteryHealth.setBounds(96, 65, 76, 21);
+		
+		Group grpApplication = new Group(grpSolarCar, SWT.NONE);
+		grpApplication.setText("Application");
+		grpApplication.setBounds(10, 151, 320, 104);
+		
+		txtMainThreadLoad = new Text(grpApplication, SWT.BORDER | SWT.READ_ONLY | SWT.CENTER);
+		txtMainThreadLoad.setText("--");
+		txtMainThreadLoad.setBounds(95, 20, 76, 21);
+		
+		Label lblMainThreadLoad = new Label(grpApplication, SWT.NONE);
+		lblMainThreadLoad.setText("Thread Load");
+		lblMainThreadLoad.setBounds(10, 26, 66, 15);
+		
+		cmpsite_GraphLoad = new Composite(grpApplication, SWT.NONE);
+		cmpsite_GraphLoad.setBounds(12, 44, 298, 50);
 		
 		Group grpNetwork = new Group(comp_overview, SWT.NONE);
 		grpNetwork.setText("Network");

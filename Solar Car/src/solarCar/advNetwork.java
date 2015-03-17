@@ -78,6 +78,7 @@ public class advNetwork {
 	//...Network statistics
 	private double stat_PacketCount,stat_DataCount,stat_ThreadLoad;
 	private statTrack stat_PacketRate = new statTrack(),stat_DataRate = new statTrack();
+	private long stat_PacketTimeStampLast =0;
 		
 	//...Timer
 	private advTimer  netTimer;	
@@ -158,26 +159,29 @@ public class advNetwork {
 
 			//...infinitive loop. Exits up error or interrupt
 			while ( run ) {
-				n = System.nanoTime();
+				n = (long)netThreadTimer.timeNow();
 				//...Check for data??
 				len = sock.recv(data, len);
 				if ( len > 0 ) {
 					//...Packet it
-					packet = new netPacket( data );
-		            
-		            ///....Handle packet system. 	
-		            packetQueue.add( packet );  // <--- ERRROR?  
+					do{
+						packet = new netPacket( data );		            
+			            ///....Handle packet system.					
+	 		            packetQueue.add( packet );  // <--- ERRROR?  
+					}while ( packet.nextPacket() != null ); //...This account for TCP Model
 					
 					//...statistical
 					stat_DataRate.addMark(len);					stat_DataCount += len;
-					stat_PacketRate.addMark();						stat_PacketCount++;
-					packet = null; data[0]='\n';
+					stat_PacketRate.addMark();					stat_PacketCount++;
+					packet = null; data[0]='\n';				stat_PacketTimeStampLast = statTrack.getTime();
 				
 				}
 				else{
 					//...No data. do something productive.
+					
 				}
-							
+					
+				//...Thread statistics
 				l = (long) netThreadTimer.timeNow();
 				delta = (double)(l - n);
 				stat_ThreadLoad = util.roundEx(netThreadTimer.nanoToMili( delta ),2);
@@ -188,6 +192,32 @@ public class advNetwork {
         }
 	}
 	
+	//...Work out connection state:
+	public void updateState ( ) {
+		long t = statTrack.getTime();
+		//...Socket type
+		if ( sock.isUDP() ){
+			//...Check;
+			//if (!sock.isConnected()) {	state = "CLIENT DISCONNECTED"; }
+			//...Active: < 1000ms
+			if ( stat_PacketTimeStampLast + 1000 > t   ) { state = "CONNECTED"; } else
+			if ( stat_PacketTimeStampLast + 1000 < t && stat_PacketTimeStampLast + 3000 > t  ) { state = "GHOSTING"; } else
+			if ( stat_PacketTimeStampLast + 3000 < t && stat_PacketTimeStampLast + 6000 > t  ) { state = "DISCONNECTED"; }	
+			
+		}else if ( sock.isTCP() ) {
+			if (!sock.isConnected()) {	state = "CLIENT DISCONNECTED"; }
+			
+			//...Active: < 1000ms
+			if ( stat_PacketTimeStampLast + 1000 > t   ) { state = "CONNECTED"; } else
+			if ( stat_PacketTimeStampLast + 1000 < t && stat_PacketTimeStampLast + 3000 < t  ) { state = "GHOSTING"; } else
+			if ( stat_PacketTimeStampLast + 3000 < t && stat_PacketTimeStampLast + 6000 < t  ) { state = "DISCONNECTED"; }	
+		
+		}else { 
+			Log.Log(  "state update - Unknown Socket Type" , Surveillance.LOG_WARNING );
+		}
+		
+	}
+	
     //...Interface can call this 
     protected synchronized void netGuiUpdate ( final Interface interfaceThread ){
     	//...Update network related information:
@@ -195,7 +225,9 @@ public class advNetwork {
     	Display.getDefault().asyncExec(new Runnable() 
     	{
     		 public void run() {
-    			//...PER SECOND
+	    		 if (interfaceThread.tabFolder.getSelectionIndex() == 0 && interfaceThread.tabFolder.isEnabled()){
+	    		
+	    			//...PER SECOND
     		    	interfaceThread.txtNetDataRecv.setText( stat_DataRate.getRateV() + " bytes" );
     		    	interfaceThread.txtNetPacketsSecond.setText( stat_PacketRate.getRate() + "");
     		    	interfaceThread.txtNetConnectionState.setText( state );
@@ -203,6 +235,7 @@ public class advNetwork {
     		    	//...TOTAL
     		    	interfaceThread.txtNetTotalPackets.setText ( stat_PacketCount + "");
     		    	interfaceThread.txtNetLoad.setText ( stat_ThreadLoad + "ms");
+	    		 }
     		 }
     	});
    
@@ -249,8 +282,9 @@ public class advNetwork {
 	    		}else{
 	    			//...Unknown key for dictonary
 	    			//Log.Log("Unknow packet: "+ key , Surveillance.LOG_WARNING );
-	    			
+	    		
 	    		}
+	    		
     		}
     		
     	}catch ( NullPointerException ex) {
@@ -258,7 +292,7 @@ public class advNetwork {
     	}
     		
     	// Update network GUI and stats
-    
+    	updateState();
 
     	return ret;
     }

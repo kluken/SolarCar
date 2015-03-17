@@ -109,6 +109,11 @@ public class netPacket {
 			return;
 		}
 	}
+   
+    netPacket nextPacket() {
+    	//...If we got more than we bargined 
+    	return null;
+    }
 	
 	public boolean isFlagged() {
 		//...Is any are flagged
