@@ -19,14 +19,14 @@ import java.util.Iterator;
 public class DictionaryCreator {
 	//private Scanner readInput;
 	private File inputFile;
-	public HashMap<String, String[]> packetStruc = new HashMap<String, String[]>();
+	public HashMap<String, String[]> data = new HashMap<String, String[]>();
 	
 	/**
 	 * Constructor
 	 * @param csvToCreate
 	 */
-	public DictionaryCreator(File csvToCreate) throws IOException{
-		this.inputFile = csvToCreate;
+	public DictionaryCreator() throws IOException{
+		this.inputFile = "solarTest.txt";
 		createHashMap();
 	}
 	
@@ -51,7 +51,7 @@ public class DictionaryCreator {
 				System.out.print(structure[i] + ", ");
 			}
 			System.out.print("\n");
-			packetStruc.put(id, structure);
+			data.put(id, structure);
 		}
 		// Close the reading file
 		readInput.close();
@@ -66,7 +66,7 @@ public class DictionaryCreator {
 		// TODO ask if overwirte, or save as new file
 		
 		ArrayList<String> content = new ArrayList<String>();
-		Iterator<String> iterator = packetStruc.keySet().iterator(); 
+		Iterator<String> iterator = data.keySet().iterator(); 
 			
 		// Cycle through Hash Map
 		while (iterator.hasNext()) {
@@ -74,11 +74,11 @@ public class DictionaryCreator {
 		  String key = iterator.next().toString();
 		  String value = "";
 		  
-		  for (int i = 0; i < packetStruc.get(key).length; i++) {
-	   		if (i < packetStruc.get(key).length-1) {
-	   			value += packetStruc.get(key)[i] + ", ";
+		  for (int i = 0; i < data.get(key).length; i++) {
+	   		if (i < data.get(key).length-1) {
+	   			value += data.get(key)[i] + ", ";
 	   		} else {
-	   			value += packetStruc.get(key)[i];
+	   			value += data.get(key)[i];
 	   		}
 		  }
 		  content.add(key + ", " + value);
