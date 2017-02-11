@@ -52,7 +52,7 @@ public class network {
     JLabel pIn, inSize, pCount,pDataQueue;
     
     //...Dictionary
-    private Dictionary dic = new Dictionary();
+    private DictionaryCreator dic = new DictionaryCreator();
 	
 	public int initlise ( ) { 	
 		
